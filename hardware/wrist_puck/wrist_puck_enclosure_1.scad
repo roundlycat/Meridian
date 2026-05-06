@@ -129,18 +129,44 @@ POST_H      =  3.0;
 module bottom_shell() {
     difference() {
         union() {
-            // Main cylinder
-            cylinder(h = PUCK_H - LID_T, d = PUCK_D);
+            // Hollowed out main shell
+            difference() {
+                // Main cylinder
+                cylinder(h = PUCK_H - LID_T, d = PUCK_D);
+                // Interior void
+                translate([0, 0, FLOOR_T])
+                    cylinder(h = PUCK_H, d = INNER_R*2);
+            }
 
             // Strap lug pads (+X and -X walls)
             for (s = [-1, 1])
                 translate([s*(PUCK_D/2 - WALL/2), 0, STRAP_Z + STRAP_H/2])
                     cube([WALL*2, STRAP_W + WALL*2, STRAP_H + WALL*2], center=true);
+
+            // --- RETAINING WALLS / MOUNTING BOSSES ---
+            
+            // Battery retaining lip
+            translate([BATT_CX, BATT_CY, FLOOR_T + (BATT_H + BATT_LIP)/2])
+                cube([BATT_W + WALL*2, BATT_D + WALL*2, BATT_H + BATT_LIP], center=true);
+                
+            // Servo retaining walls
+            translate([SERVO_CX, SERVO_CY, FLOOR_T + SERVO_H/2])
+                cube([SERVO_W + WALL*2, SERVO_D + WALL*2, SERVO_H], center=true);
+                
+            // XIAO retaining walls
+            translate([XIAO_CX, XIAO_CY, FLOOR_T + XIAO_H/2])
+                cube([XIAO_W + WALL*2, XIAO_D + WALL*2, XIAO_H], center=true);
+                
+            // Rail supports
+            translate([0, 0, FLOOR_T + (RAIL_Z - FLOOR_T + RAIL_SLOT_H)/2])
+                cube([RAIL_L + 4, RAIL_W + WALL*2, RAIL_Z - FLOOR_T + RAIL_SLOT_H], center=true);
+                
+            // LRA boss (since LRA is thicker than floor)
+            translate([LRA_CX, LRA_CY, 0])
+                cylinder(h = LRA_H + 1.0, d = LRA_DIAM + WALL*2);
         }
 
-        // Interior void
-        translate([0, 0, FLOOR_T])
-            cylinder(h = PUCK_H, d = INNER_R*2);
+        // --- CUTOUTS ---
 
         // Snap-fit slots in rim (45-deg offset so they land between strap lugs)
         for (i = [0:SNAP_N-1])
@@ -154,70 +180,69 @@ module bottom_shell() {
                 cube([WALL*4+2, STRAP_W, STRAP_H], center=true);
 
         // LRA floor pocket (recessed from below — vibration to skin)
-        translate([LRA_CX, LRA_CY, 0])
-            cylinder(h = LRA_H, d = LRA_DIAM);
+        translate([LRA_CX, LRA_CY, -0.1])
+            cylinder(h = LRA_H + 0.1, d = LRA_DIAM);
 
         // LRA wire channel toward battery/DRV zone
         hull() {
-            translate([LRA_CX, LRA_CY, 0])
+            translate([LRA_CX, LRA_CY, FLOOR_T])
                 cylinder(h=1.5, d=3.5);
-            translate([BATT_CX - BATT_W/2, BATT_CY - BATT_D/2 + 4, 0])
+            translate([BATT_CX - BATT_W/2, BATT_CY - BATT_D/2 + 4, FLOOR_T])
                 cylinder(h=1.5, d=3.5);
         }
 
         // Battery pocket (floor level + retaining lip)
-        translate([BATT_CX, BATT_CY, FLOOR_T])
-            cube([BATT_W, BATT_D, BATT_H + BATT_LIP], center=true);
+        translate([BATT_CX, BATT_CY, FLOOR_T + (BATT_H + BATT_LIP)/2])
+            cube([BATT_W, BATT_D, BATT_H + BATT_LIP + 0.1], center=true);
 
         // Servo cavity
-        translate([SERVO_CX, SERVO_CY, FLOOR_T])
-            cube([SERVO_W, SERVO_D, SERVO_H], center=true);
+        translate([SERVO_CX, SERVO_CY, FLOOR_T + SERVO_H/2])
+            cube([SERVO_W, SERVO_D, SERVO_H + 0.1], center=true);
 
         // Servo horn clearance slot (+X of servo, connects to rail)
-        translate([SERVO_CX + SERVO_W/2 + 2.5, SERVO_CY,
-                   FLOOR_T + SERVO_H/2 + 2])
+        translate([SERVO_CX + SERVO_W/2 + 2.5, SERVO_CY, FLOOR_T + SERVO_H/2 + 2])
             cube([7, SERVO_D, 5], center=true);
 
         // Rail slot (lateral, near servo top height)
         translate([0, 0, RAIL_Z + RAIL_SLOT_H/2])
-            cube([RAIL_L, RAIL_W, RAIL_SLOT_H], center=true);
+            cube([RAIL_L, RAIL_W, RAIL_SLOT_H + 0.1], center=true);
 
         // XIAO pocket
-        translate([XIAO_CX, XIAO_CY, FLOOR_T])
-            cube([XIAO_W, XIAO_D, XIAO_H], center=true);
+        translate([XIAO_CX, XIAO_CY, FLOOR_T + XIAO_H/2])
+            cube([XIAO_W, XIAO_D, XIAO_H + 0.1], center=true);
 
         // USB-C cutout through back wall (-Y direction)
         translate([XIAO_CX, -(PUCK_D/2 - 0.1), FLOOR_T + 2.5])
             cube([USBC_W, WALL+0.5, USBC_H], center=true);
 
         // DRV pocket (above battery)
-        translate([DRV_CX, DRV_CY, DRV_Z])
-            cube([DRV_W, DRV_D, DRV_H + 0.5], center=true);
+        translate([DRV_CX, DRV_CY, DRV_Z + DRV_H/2])
+            cube([DRV_W, DRV_D, DRV_H + 0.1], center=true);
 
         // Perfboard pocket (above DRV)
-        translate([PFB_CX, PFB_CY, PFB_Z])
-            cube([PFB_W, PFB_D, PFB_H], center=true);
+        translate([PFB_CX, PFB_CY, PFB_Z + PFB_H/2])
+            cube([PFB_W, PFB_D, PFB_H + 0.1], center=true);
 
         // I2C wire channel: DRV/battery zone to XIAO
         hull() {
-            translate([BATT_CX, BATT_CY - BATT_D/2, FLOOR_T + 2])
+            translate([BATT_CX, BATT_CY - BATT_D/2, FLOOR_T + 1.5])
                 cube([3, 1, 3], center=true);
-            translate([XIAO_CX, XIAO_CY + XIAO_D/2, FLOOR_T + 2])
+            translate([XIAO_CX, XIAO_CY + XIAO_D/2, FLOOR_T + 1.5])
                 cube([3, 1, 3], center=true);
         }
 
         // Servo PWM wire channel: servo to XIAO
         hull() {
-            translate([SERVO_CX + SERVO_W/2, SERVO_CY - 4, FLOOR_T + 2])
+            translate([SERVO_CX + SERVO_W/2, SERVO_CY - 4, FLOOR_T + 1.5])
                 cube([1, 3, 3], center=true);
-            translate([XIAO_CX, XIAO_CY + XIAO_D/2 + 2, FLOOR_T + 2])
+            translate([XIAO_CX, XIAO_CY + XIAO_D/2 + 2, FLOOR_T + 1.5])
                 cube([1, 3, 3], center=true);
         }
 
         // M2 standoff holes
         for (a = [0,90,180,270])
             rotate([0,0,a+45])
-                translate([POST_RADIUS, 0, 0])
+                translate([POST_RADIUS, 0, -0.1])
                     cylinder(h = FLOOR_T + POST_H + 1, d = POST_ID);
     }
 
@@ -229,7 +254,7 @@ module bottom_shell() {
                     cylinder(h = POST_H, d = POST_OD);
         for (a = [0,90,180,270])
             rotate([0,0,a+45])
-                translate([POST_RADIUS, 0, 0])
+                translate([POST_RADIUS, 0, -0.1])
                     cylinder(h = FLOOR_T + POST_H + 1, d = POST_ID);
     }
 }
