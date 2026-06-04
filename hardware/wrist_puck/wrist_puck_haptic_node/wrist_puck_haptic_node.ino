@@ -41,7 +41,7 @@ void setup() {
   Serial.println("Wrist-Puck Dual-Channel Haptic Node");
   Serial.println("==================================");
   
-  pinMode(BAT_ADC_PIN, INPUT);
+  pinMode(BAT_ADC_PIN, INPUT_PULLUP);
 
   // Initialize I2C
   Wire.begin(SDA_PIN, SCL_PIN);
@@ -103,16 +103,13 @@ void calibrateMotors() {
 // Main Loop
 // ---------------------------------------------------------
 void loop() {
-  // Check battery (Voltage divider 100k/100k)
-  int adcValue = analogRead(BAT_ADC_PIN);
-  // ESP32-C3 ADC is 12-bit (0-4095). Max voltage is 3.3V. 
-  // Divider cuts voltage in half, so we multiply by 2.
-  batVoltage = (adcValue / 4095.0) * 3.3 * 2.0; 
+  // Read digital Low Battery Output (LBO) from PowerBoost
+  // LBO pulls LOW when battery voltage drops below 3.2V
+  bool isLowBattery = (digitalRead(BAT_ADC_PIN) == LOW);
   
-  // Low battery check (Only trigger if battery is actually connected > 1.0V)
-  if (batVoltage < 3.3 && batVoltage > 1.0) {
+  if (isLowBattery) {
     if (!lowBatteryState) {
-      Serial.printf("WARNING: Low battery! %.2fV\n", batVoltage);
+      Serial.println("WARNING: Low battery detected via PowerBoost LBO!");
       lowBatteryState = true;
     }
   } else {
