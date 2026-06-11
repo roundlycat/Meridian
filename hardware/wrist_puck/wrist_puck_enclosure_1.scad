@@ -29,6 +29,7 @@ WALL      = 2.2;
 FLOOR_T   = 2.0;
 LID_T     = 1.8;
 CLEARANCE = 0.3;
+LID_TABS  = false;   // Set to true for outer snap tabs; false for clean circular lid
 $fn       = 128;
 
 // ── DERIVED ─────────────────────────────────────────────────
@@ -277,11 +278,44 @@ module lid() {
                         cylinder(h=2.2, d=INNER_R*2 - CLEARANCE*2 - WALL*2);
                 }
 
-            // Snap-fit bumps on outer face of locating rim
-            for (i = [0:SNAP_N-1])
-                rotate([0,0, i*(360/SNAP_N) + 45])
-                    translate([INNER_R - CLEARANCE, 0, -1.0])
-                        sphere(r=0.8, $fn=32);
+            // Snap-fit bumps on outer face of locating rim (only if not using outer tabs)
+            if (!LID_TABS) {
+                for (i = [0:SNAP_N-1])
+                    rotate([0,0, i*(360/SNAP_N) + 45])
+                        translate([INNER_R - CLEARANCE, 0, -1.0])
+                            sphere(r=0.8, $fn=32);
+            }
+
+            // Outer snap tabs/latches (align with strap pads on +/- X sides)
+            if (LID_TABS) {
+                // Distance from top of shell to top of strap slot: 
+                // shell_height = PUCK_H - LID_T (22.2mm)
+                // slot_top = STRAP_Z + STRAP_H (11.0mm)
+                // We want the tab to reach slot_top and hook in.
+                tab_length = (PUCK_H - LID_T) - (STRAP_Z + STRAP_H) + 2.5; // ~13.7mm
+                tab_w = STRAP_W - 1.5; // ~21.5mm (slips inside the strap lug width)
+                tab_thickness = 1.5;
+                pad_outer_x = PUCK_D/2 + WALL/2; // 38 + 1.1 = 39.1mm
+                
+                for (s = [-1, 1]) {
+                    rotate([0, 0, s == 1 ? 0 : 180]) {
+                        // Place tab just outside the pad outer face with clearance
+                        translate([pad_outer_x + CLEARANCE, -tab_w/2, -tab_length]) {
+                            // Vertical tab arm
+                            cube([tab_thickness, tab_w, tab_length]);
+                            
+                            // Snap tooth pointing inward (in -X direction)
+                            translate([-1.5, 0, 0])
+                                cube([1.5, tab_w, 2.0]);
+                            
+                            // Chamfer/lead-in angle
+                            translate([-1.5, 0, 2.0])
+                                rotate([0, 45, 0])
+                                    cube([1.5, tab_w, 1.5]);
+                        }
+                    }
+                }
+            }
         }
 
         // LRA window (open hole — max tactile transmission)
