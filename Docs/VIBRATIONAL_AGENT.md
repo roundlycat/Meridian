@@ -138,3 +138,96 @@ Within the **Meridian distributed sensor ecology**, the VFA-1 acts as an active 
 * **Gradient Searching**: The agent can read light or presence values, executing small locomotion bursts to "creep" into direct sunlight to charge, or to position itself near human presence when active tracking is required.
 * **Network Healing**: If a fixed sensor pod detects a communication drop, a nearby VFA-1 could be commanded via UDP/ESP-NOW to migrate closer to the relay point, serving as a dynamic wireless repeater.
 * **Low Hardware Overhead**: No gears to jam, no exposed axles to gather dust or outdoor debris, and a tiny footprint that fits inside a pocket.
+
+---
+
+## 6. Steerable Morphology: The Inertial ERM Wiggler
+
+Based on the inertial steering robot concept demonstrated by Pro Know, we can design an alternative steerable morphology using an **Eccentric Rotating Mass (ERM)** vibration motor and a bi-directional H-bridge driver.
+
+### 6.1 Steering & Locomotion Physics
+Rather than relying on angled bristles, the ERM wiggler uses rotational inertia and directional friction:
+
+1. **Steer Left (CCW Pivot)**: Drive the ERM motor in **Reverse (CCW)**. The rotational inertia wiggles the chassis and pivots the legs counter-clockwise.
+2. **Steer Right (CW Pivot)**: Drive the ERM motor in **Forward (CW)**. The opposite rotational inertia wiggles the chassis clockwise.
+3. **Move Forward**: Rapidly alternate the motor polarity (e.g., CW for 40ms, CCW for 40ms). The rapid back-and-forth wiggling breaks static friction, and when balanced correctly with slightly flexible legs, drives the robot forward in a straight line.
+
+```
+       [Forward Path]
+             ^
+             |   (Rapid CW / CCW alternating wiggles)
+        ~ ~ ~|~ ~ ~
+       |     |     |
+     (CCW)   |   (CW)
+     Pivot  / \  Pivot
+       <---/   \--->
+```
+
+### 6.2 Electronics Stack Adjustments
+To support reversing the DC motor polarity, we swap the unidirectional driver requirements:
+* **Driver**: Tiny H-bridge IC like the **DRV8212** or the **DRV8837C** (which have simple IN1/IN2 control pins and can handle the high stall current of small DC vibration motors).
+* **Motor**: A standard **coreless DC vibration motor** (cylinder style with an off-center brass weight, typical in paging devices). *Note: LRAs cannot be driven this way as they are AC-only resonance devices.*
+* **MCU**: Seed Studio XIAO ESP32-C3 or an ESP-01F module, running **ESP-NOW** for ultra-low latency direct wireless control from a bench remote or control node.
+
+### 6.3 Code Concept: H-Bridge Polarity Alternator
+This code snippet illustrates how to implement the straight-line shimmy and differential steering with a dual-pin H-bridge driver:
+
+```cpp
+#define IN1_PIN 2 // GPIO2 -> H-Bridge Input 1
+#define IN2_PIN 3 // GPIO3 -> H-Bridge Input 2
+
+void setup() {
+  pinMode(IN1_PIN, OUTPUT);
+  pinMode(IN2_PIN, OUTPUT);
+  stopMotor();
+}
+
+void driveForward(int durationMs, int frequencyHz) {
+  int periodMs = 1000 / frequencyHz;
+  int halfPeriod = periodMs / 2;
+  unsigned long start = millis();
+  
+  while (millis() - start < durationMs) {
+    // Phase 1: CW spin
+    digitalWrite(IN1_PIN, HIGH);
+    digitalWrite(IN2_PIN, LOW);
+    delay(halfPeriod);
+    
+    // Phase 2: CCW spin
+    digitalWrite(IN1_PIN, LOW);
+    digitalWrite(IN2_PIN, HIGH);
+    delay(halfPeriod);
+  }
+  stopMotor();
+}
+
+void pivotLeft(int durationMs) {
+  digitalWrite(IN1_PIN, LOW);
+  digitalWrite(IN2_PIN, HIGH); // Constant CCW
+  delay(durationMs);
+  stopMotor();
+}
+
+void pivotRight(int durationMs) {
+  digitalWrite(IN1_PIN, HIGH); // Constant CW
+  digitalWrite(IN2_PIN, LOW);
+  delay(durationMs);
+  stopMotor();
+}
+
+void stopMotor() {
+  digitalWrite(IN1_PIN, LOW);
+  digitalWrite(IN2_PIN, LOW);
+}
+
+void loop() {
+  // Drive forward for 2 seconds
+  driveForward(2000, 15); 
+  delay(500);
+  
+  // Pivot left (steer)
+  pivotLeft(500); 
+  delay(500);
+}
+```
+
