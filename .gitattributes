@@ -1,0 +1,6 @@
+# Authored on Windows, deployed on Linux (Inferno / Pi). Force LF on anything
+# that runs through a shell or interpreter so CRLF can never break a shebang.
+*.sh    text eol=lf
+*.py    text eol=lf
+*.sql   text eol=lf
+*.env   text eol=lf
