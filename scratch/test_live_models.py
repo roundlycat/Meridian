@@ -1,6 +1,7 @@
 import asyncio
 import sys
 import io
+import os
 
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
 
@@ -8,7 +9,7 @@ from google import genai
 from google.genai import types
 
 async def test():
-    client = genai.Client(api_key='AIzaSyB1ofjImnTEeXF6YBlMZKl2TDpLWT7QaiA')
+    client = genai.Client(api_key=os.environ["GOOGLE_API_KEY"])
     
     models_to_try = [
         'gemini-2.5-flash-native-audio-latest',

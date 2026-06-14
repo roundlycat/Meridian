@@ -124,9 +124,9 @@ TABLES = [
         "vector_cols": ["centroid_embedding"],
         "query": """
             SELECT id, label, centroid_embedding::text AS centroid_embedding,
-                   source_corpus, created_at, updated_at
+                   score, last_seen, active, updated_at
             FROM motifs
-            ORDER BY created_at, id
+            ORDER BY updated_at, id
         """,
     },
     {
