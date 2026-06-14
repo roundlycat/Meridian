@@ -38,7 +38,10 @@ CREATE TABLE boot_sessions (
     id             BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
     node_id        TEXT NOT NULL REFERENCES nodes(node_id),
     boot_id        TEXT NOT NULL,                    -- node-local boot nonce
-    first_seen_at  TIMESTAMPTZ NOT NULL DEFAULT now(),
+    first_seen_at  TIMESTAMPTZ NOT NULL DEFAULT now(),  -- wall clock at first packet of this boot
+    boot_epoch     TIMESTAMPTZ,                      -- estimated instant the node booted:
+                                                     -- first_seen_at - (first millis_since_boot).
+                                                     -- event_time = boot_epoch + millis_since_boot.
     UNIQUE (node_id, boot_id)
 );
 

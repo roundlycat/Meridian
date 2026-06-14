@@ -1,0 +1,4 @@
+# Meridian v2 Python services (run on Inferno; v1's venv already has asyncpg).
+asyncpg>=0.29
+aiomqtt>=2.0      # async MQTT client (wraps paho); ingestion + relay
+aiohttp>=3.9      # Ollama embedding calls (embedding step / relay enrichment)
