@@ -1,0 +1,25 @@
+import http.server
+import socketserver
+import subprocess
+
+PORT = 8080
+
+class CamHandler(http.server.BaseHTTPRequestHandler):
+    def do_GET(self):
+        if self.path == '/snap':
+            self.send_response(200)
+            self.send_header('Content-type', 'image/jpeg')
+            self.end_headers()
+            
+            cmd = ["rpicam-still", "-t", "2000", "--autofocus-range", "macro", "-o", "-"]
+            subprocess.run(cmd, stdout=self.wfile, stderr=subprocess.DEVNULL)
+        else:
+            self.send_response(404)
+            self.end_headers()
+
+class ReusableServer(socketserver.TCPServer):
+    allow_reuse_address = True
+
+with ReusableServer(("0.0.0.0", PORT), CamHandler) as httpd:
+    print(f"Bench Cam Server running on port {PORT}")
+    httpd.serve_forever()

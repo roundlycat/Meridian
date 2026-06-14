@@ -1,0 +1,50 @@
+May 21 06:48:47 camera-pi systemd[1]: skycam.service: Failed with result 'exit-code'.
+May 21 06:48:47 camera-pi systemd[1]: Failed to start skycam.service - Sky Cam Inky Display.
+May 21 06:50:15 camera-pi systemd[1]: Started skycam.service - Sky Cam Inky Display.
+May 21 06:50:17 camera-pi python3[1281]: Updating display with: Sky Cam Booting...
+May 21 06:50:17 camera-pi python3[1281]: Waiting for deltas.
+May 21 06:50:17 camera-pi python3[1281]: Woah there, some pins we need are in use!
+May 21 06:50:17 camera-pi python3[1281]:   ⚠️   Chip Select: (line 8, GPIO8) currently claimed by spi0 CS0
+May 21 06:50:17 camera-pi systemd[1]: skycam.service: Main process exited, code=exited, status=1/FAILURE
+May 21 06:50:17 camera-pi systemd[1]: skycam.service: Failed with result 'exit-code'.
+May 21 06:50:17 camera-pi systemd[1]: skycam.service: Consumed 1.499s CPU time.
+May 21 06:50:17 camera-pi systemd[1]: skycam.service: Scheduled restart job, restart counter is at 1.
+May 21 06:50:17 camera-pi systemd[1]: Started skycam.service - Sky Cam Inky Display.
+May 21 06:50:18 camera-pi python3[1284]: Updating display with: Sky Cam Booting...
+May 21 06:50:18 camera-pi python3[1284]: Waiting for deltas.
+May 21 06:50:18 camera-pi python3[1284]: Woah there, some pins we need are in use!
+May 21 06:50:18 camera-pi python3[1284]:   ⚠️   Chip Select: (line 8, GPIO8) currently claimed by spi0 CS0
+May 21 06:50:19 camera-pi systemd[1]: skycam.service: Main process exited, code=exited, status=1/FAILURE
+May 21 06:50:19 camera-pi systemd[1]: skycam.service: Failed with result 'exit-code'.
+May 21 06:50:19 camera-pi systemd[1]: skycam.service: Consumed 1.495s CPU time.
+May 21 06:50:19 camera-pi systemd[1]: skycam.service: Scheduled restart job, restart counter is at 2.
+May 21 06:50:19 camera-pi systemd[1]: Started skycam.service - Sky Cam Inky Display.
+May 21 06:50:20 camera-pi python3[1286]: Updating display with: Sky Cam Booting...
+May 21 06:50:20 camera-pi python3[1286]: Waiting for deltas.
+May 21 06:50:20 camera-pi python3[1286]: Woah there, some pins we need are in use!
+May 21 06:50:20 camera-pi python3[1286]:   ⚠️   Chip Select: (line 8, GPIO8) currently claimed by spi0 CS0
+May 21 06:50:20 camera-pi systemd[1]: skycam.service: Main process exited, code=exited, status=1/FAILURE
+May 21 06:50:20 camera-pi systemd[1]: skycam.service: Failed with result 'exit-code'.
+May 21 06:50:20 camera-pi systemd[1]: skycam.service: Consumed 1.475s CPU time.
+May 21 06:50:21 camera-pi systemd[1]: skycam.service: Scheduled restart job, restart counter is at 3.
+May 21 06:50:21 camera-pi systemd[1]: Started skycam.service - Sky Cam Inky Display.
+May 21 06:50:22 camera-pi python3[1288]: Updating display with: Sky Cam Booting...
+May 21 06:50:22 camera-pi python3[1288]: Waiting for deltas.
+May 21 06:50:22 camera-pi python3[1288]: Woah there, some pins we need are in use!
+May 21 06:50:22 camera-pi python3[1288]:   ⚠️   Chip Select: (line 8, GPIO8) currently claimed by spi0 CS0
+May 21 06:50:22 camera-pi systemd[1]: skycam.service: Main process exited, code=exited, status=1/FAILURE
+May 21 06:50:22 camera-pi systemd[1]: skycam.service: Failed with result 'exit-code'.
+May 21 06:50:22 camera-pi systemd[1]: skycam.service: Consumed 1.474s CPU time.
+May 21 06:50:22 camera-pi systemd[1]: skycam.service: Scheduled restart job, restart counter is at 4.
+May 21 06:50:22 camera-pi systemd[1]: Started skycam.service - Sky Cam Inky Display.
+May 21 06:50:24 camera-pi python3[1290]: Updating display with: Sky Cam Booting...
+May 21 06:50:24 camera-pi python3[1290]: Waiting for deltas.
+May 21 06:50:24 camera-pi python3[1290]: Woah there, some pins we need are in use!
+May 21 06:50:24 camera-pi python3[1290]:   ⚠️   Chip Select: (line 8, GPIO8) currently claimed by spi0 CS0
+May 21 06:50:24 camera-pi systemd[1]: skycam.service: Main process exited, code=exited, status=1/FAILURE
+May 21 06:50:24 camera-pi systemd[1]: skycam.service: Failed with result 'exit-code'.
+May 21 06:50:24 camera-pi systemd[1]: skycam.service: Consumed 1.474s CPU time.
+May 21 06:50:24 camera-pi systemd[1]: skycam.service: Scheduled restart job, restart counter is at 5.
+May 21 06:50:24 camera-pi systemd[1]: skycam.service: Start request repeated too quickly.
+May 21 06:50:24 camera-pi systemd[1]: skycam.service: Failed with result 'exit-code'.
+May 21 06:50:24 camera-pi systemd[1]: Failed to start skycam.service - Sky Cam Inky Display.

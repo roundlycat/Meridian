@@ -1,0 +1,6 @@
+# Bulk corpus data can be large — keep it out of plain git.
+# Track with git-lfs (`git lfs track 'seed/export/*.jsonl.gz'`) or store out-of-band.
+# The MANIFEST.json below is the authoritative, version-controlled record
+# (row counts + sha256 of each file's uncompressed content).
+*.jsonl.gz
+!MANIFEST.json
