@@ -12,8 +12,7 @@ The one-time inheritance of sensor_ecology (v1) into Meridian v2. Step 2 of
 | File | Role |
 |------|------|
 | `agent_nodes.jsonl.gz` | perceptual node registry (FK target) |
-| `sensor_readings.jsonl.gz` | canonical raw readings |
-| `perceptual_events.jsonl.gz` | fused events **with intact 768-dim embeddings** |
+| `perceptual_events.jsonl.gz` | fused events **with intact 768-dim embeddings** (the replay corpus, ~284k rows) |
 | `motifs.jsonl.gz` | v1's **asserted** motifs — the "before" half of Slice B's asserted-vs-earned diff |
 | `motif_label_map.jsonl.gz` | event_label → motif_id (migration completed 2026-06-12) |
 
@@ -22,6 +21,12 @@ The one-time inheritance of sensor_ecology (v1) into Meridian v2. Step 2 of
 and the legacy 384-dim `observations` / `emergent_patterns` / `agents` layer.
 Mixing 384-dim and 768-dim embeddings is forbidden (v1 CLAUDE.md), and the
 legacy layer is not part of the perceptual seed.
+
+**`sensor_readings` (the 21M-row raw firehose) is excluded by default.** Slice B
+replays `perceptual_events`, and the per-event raw values already live in each
+event's `feature_snapshot` — so the firehose is multi-GB of bloat for the seed's
+purpose. Pass `--include-raw-readings` to archive it separately if you want a cold
+copy of the raw readings before v1 is decommissioned.
 
 ## Running the export (on Inferno)
 

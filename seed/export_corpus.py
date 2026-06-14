@@ -66,7 +66,8 @@ log = logging.getLogger(__name__)
 DB_URL = os.environ.get("DATABASE_URL", "postgresql://sean:ecology@localhost/sensor_ecology")
 EMBED_MODEL = os.environ.get("EMBED_MODEL", "nomic-embed-text")
 EMBEDDING_DIM = 768
-CURSOR_BATCH = 1000  # rows prefetched per server-side cursor round-trip
+CURSOR_BATCH = 1000      # rows prefetched per server-side cursor round-trip
+PROGRESS_EVERY = 50000   # log a progress line every N rows on streamed tables
 
 
 # ---------------------------------------------------------------------------
@@ -90,6 +91,7 @@ TABLES = [
     {
         "name": "sensor_readings",
         "stream": True,
+        "optional": True,   # 21M-row raw firehose; opt-in only (--include-raw-readings)
         "vector_cols": [],
         "query": """
             SELECT id, agent_node_id, domain, sensor_label, channel,
@@ -140,6 +142,9 @@ TABLES = [
 ]
 
 EXCLUSIONS = {
+    "sensor_readings": "21M-row raw sensor firehose; not needed for replay (per-event raws live "
+                       "in perceptual_events.feature_snapshot). Opt in with --include-raw-readings "
+                       "to archive it separately.",
     "motif_resonance": "corrupted resonance corpus (ingestion-time classification) — the lesson, not the data",
     "perceptual_motif_drift": "derived from the corrupted resonance lineage",
     "observations": "legacy 384-dim MiniLM agent layer, superseded by the 768-dim perceptual layer",
@@ -202,6 +207,8 @@ async def export_table(conn, spec, out_dir):
             hasher.update(data)   # hash of uncompressed JSONL — stable & verifiable
             gz.write(data)
             rows += 1
+            if spec["stream"] and rows % PROGRESS_EVERY == 0:
+                log.info("  %s ... %d rows", name, rows)
 
         if spec["stream"]:
             async with conn.transaction():
@@ -216,7 +223,7 @@ async def export_table(conn, spec, out_dir):
     return {"file": f"{name}.jsonl.gz", "rows": rows, "sha256": sha}
 
 
-async def run_export(out_dir: str) -> None:
+async def run_export(out_dir: str, include_raw: bool) -> None:
     os.makedirs(out_dir, exist_ok=True)
     conn = await asyncpg.connect(DB_URL)
     # decode JSONB to Python objects so feature_snapshot/metadata nest as real JSON
@@ -243,6 +250,10 @@ async def run_export(out_dir: str) -> None:
             )
 
         for spec in TABLES:
+            if spec.get("optional") and not include_raw:
+                log.info("skipping %s (optional raw firehose; pass --include-raw-readings to export)",
+                         spec["name"])
+                continue
             files.append(await export_table(conn, spec, out_dir))
     finally:
         await conn.close()
@@ -259,6 +270,7 @@ async def run_export(out_dir: str) -> None:
         "exported_finished_utc": finished.isoformat(),
         "files": files,
         "total_rows": sum(f["rows"] for f in files),
+        "raw_readings_included": include_raw,
         "excluded_tables": EXCLUSIONS,
         "hash_note": "sha256 is computed over the UNCOMPRESSED JSONL bytes of each file",
         "vector_encoding": "pgvector columns emitted as JSON arrays of floats",
@@ -307,11 +319,14 @@ def main() -> None:
     ap.add_argument("--out", default="seed/export", help="output directory (default: seed/export)")
     ap.add_argument("--verify", action="store_true",
                     help="verify an existing export against its MANIFEST.json (no DB)")
+    ap.add_argument("--include-raw-readings", action="store_true",
+                    help="also export the 21M-row sensor_readings firehose (slow, multi-GB; "
+                         "not needed for Slice B replay)")
     args = ap.parse_args()
     if args.verify:
         run_verify(args.out)
     else:
-        asyncio.run(run_export(args.out))
+        asyncio.run(run_export(args.out, args.include_raw_readings))
 
 
 if __name__ == "__main__":
