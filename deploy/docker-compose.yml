@@ -1,0 +1,31 @@
+# Meridian v2 — Postgres substrate (pgvector).
+#
+# Runs on Inferno, ISOLATED from v1's native postgresql@17 (which holds the
+# frozen sensor_ecology corpus and is left untouched). The pgvector image ships
+# the `vector` extension, so schemas/001's CREATE EXTENSION works out of the box.
+# Reproducible from the repo alone (ADR-003 §0).
+#
+# Host port 5544 avoids clashing with the native pg on 5432.
+#   cd deploy && docker compose --env-file ./meridian.env up -d
+#   # then apply migrations:  DATABASE_URL=... ./apply_migrations.sh
+services:
+  postgres:
+    image: pgvector/pgvector:pg17
+    container_name: meridian-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: meridian
+      POSTGRES_USER: meridian
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in meridian.env}
+    ports:
+      - "5544:5432"
+    volumes:
+      - meridian_pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U meridian -d meridian"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  meridian_pgdata:
