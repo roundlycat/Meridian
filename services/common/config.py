@@ -22,6 +22,7 @@ _KNOWN_KEYS = (
     "DATABASE_URL", "EMBED_MODEL", "EMBEDDING_DIM", "OLLAMA_EMBED_URL",
     "MQTT_HOST", "MQTT_PORT", "RELAY_HOST", "RELAY_PORT", "NOTIFY_CHANNEL",
     "RAW_RETENTION_DAYS",
+    "SPOOL_LOCAL_MQTT_HOST", "SPOOL_LOCAL_MQTT_PORT", "SPOOL_DB_PATH",
 )
 
 
@@ -69,6 +70,11 @@ class Config:
     relay_port: int
     notify_channel: str
     raw_retention_days: int
+    # Spool tier (Sensor Pi). Subscribes to the LOCAL broker, forwards UPSTREAM
+    # to the central broker (mqtt_host/mqtt_port above).
+    spool_local_mqtt_host: str
+    spool_local_mqtt_port: int
+    spool_db_path: str
 
 
 def load_config() -> Config:
@@ -94,4 +100,7 @@ def load_config() -> Config:
         relay_port=int(raw.get("RELAY_PORT", "8765")),
         notify_channel=raw.get("NOTIFY_CHANNEL", "perceptual_events"),
         raw_retention_days=int(raw.get("RAW_RETENTION_DAYS", "90")),
+        spool_local_mqtt_host=raw.get("SPOOL_LOCAL_MQTT_HOST", "localhost"),
+        spool_local_mqtt_port=int(raw.get("SPOOL_LOCAL_MQTT_PORT", "1883")),
+        spool_db_path=raw.get("SPOOL_DB_PATH", "/var/lib/meridian/spool.db"),
     )
