@@ -177,7 +177,15 @@ async def _handle(conn, topic: str, payload: bytes) -> None:
 async def _run_once(cfg) -> None:
     pool = await asyncpg.create_pool(cfg.database_url, min_size=1, max_size=4)
     try:
-        async with aiomqtt.Client(hostname=cfg.mqtt_host, port=cfg.mqtt_port) as client:
+        # Durable subscription: a fixed identifier + clean_session=False makes the
+        # broker QUEUE our QoS-1 messages while we're disconnected. So when the
+        # spool drains after an Inferno outage, a reconnect race can't lose a
+        # reading the spool already considers forwarded. Requires persistence=true
+        # on the broker (MQTT v3.1.1 semantics).
+        async with aiomqtt.Client(
+            hostname=cfg.mqtt_host, port=cfg.mqtt_port,
+            identifier="meridian-ingestion", clean_session=False,
+        ) as client:
             for f in TOPIC_FILTERS:
                 await client.subscribe(f, qos=1)
             log.info("subscribed on %s:%s to %s", cfg.mqtt_host, cfg.mqtt_port, TOPIC_FILTERS)
