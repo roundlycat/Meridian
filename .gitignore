@@ -7,3 +7,6 @@ venv/
 
 # OS / editor cruft
 .DS_Store
+.vs/
+.vscode/
+.idea/
