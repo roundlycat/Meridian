@@ -5,20 +5,22 @@ Edge nodes (ESP32-C3 pollen pods, Sensor Pi) → MQTT → ingestion → PostgreS
 Inferno → relay-api (WebSocket) → Unity AR client. v1 (`sensor_ecology`) is
 **frozen**; this is the contract-first rebuild. v1's corpus is inherited under
 `seed/`. Rationale lives in the v1 archive: `sensor_ecology/docs/ADR-003_Meridian_V2.md`
-and `docs/MERIDIAN_V2_RESTRUCTURE.md` (to be imported into `docs/adr/`).
+and `sensor_ecology/docs/MERIDIAN_V2_RESTRUCTURE.md` (to be imported into `Docs/adr/`).
+Per-slice lessons accrue in `Docs/lessons/` — read them before extending a slice.
 
 ## Current slice: A — "Nothing is lost" (durability spine)
 
 The spine that makes every other slice safe to retry blindly. ADR-003 items 1, 3, 6, 9.
 
-- [ ] `sensor_readings` `UNIQUE(node_id, seq)` + `INSERT … ON CONFLICT DO NOTHING`
-- [ ] SQLite WAL spool + mosquitto bridge on Sensor Pi (.25)
-- [ ] `pg_notify` trigger + single LISTEN loop in relay; SSE polling path deleted
-- [ ] all config in `/etc/meridian/meridian.env`; embedder-dim check at startup
+- [x] `sensor_readings` `UNIQUE(node_id, seq)` + `INSERT … ON CONFLICT DO NOTHING` — proven
+- [x] SQLite WAL spool on Sensor Pi (.25) — deployed, forwards upstream (spool forwards, not a bridge)
+- [x] `pg_notify` trigger + single LISTEN loop in relay; SSE polling path gone — proven
+- [x] single `meridian.env` + embedder-dim check at startup — proven
+- [ ] **closing gate:** the falsifiable outage demo recorded in `Docs/lessons/slice-a-nothing-is-lost.md`
 
 **Demo — the slice is done when this passes, not when the code is pretty:**
-pull Inferno's power mid-stream for 10 minutes. After recovery, row counts match
-what the edge nodes emitted. v1 could not pass this; v2 must.
+pull Inferno's power mid-stream. After recovery, row counts match what the edge
+nodes emitted. v1 could not pass this; v2 must. (Build is complete; run + record.)
 
 **One slice in flight at a time.** Slices B (honest motif lifecycle) and C (pod
 first contact) are scoped but NOT started — do not build ahead of the demo.
