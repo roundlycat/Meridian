@@ -31,9 +31,15 @@ import gzip
 import json
 import logging
 import os
+import sys
 import uuid
 
 import asyncpg
+
+# Make the repo root importable so we can reuse the services config loader,
+# which parses meridian.env with Python (robust to passwords that break bash `source`).
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from services.common import load_config  # noqa: E402
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s: %(message)s")
 log = logging.getLogger("replay")
@@ -133,10 +139,7 @@ async def load_events(conn, path: str, batch_size: int, limit: int | None) -> in
 
 
 async def main(export_dir: str, batch_size: int, limit: int | None) -> None:
-    dsn = os.environ.get("DATABASE_URL")
-    if not dsn:
-        raise SystemExit("set DATABASE_URL (the meridian db, e.g. ...@localhost:5544/meridian)")
-
+    dsn = load_config().database_url        # reads meridian.env (or $DATABASE_URL override)
     conn = await asyncpg.connect(dsn)
     try:
         before = await conn.fetchval("SELECT count(*) FROM perceptual_events")
