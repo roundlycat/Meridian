@@ -1,7 +1,7 @@
-using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Networking;
+using NativeWebSocket;
 
 namespace Meridian.AR
 {
@@ -11,24 +11,64 @@ namespace Meridian.AR
     /// </summary>
     public class TelemetryRelay : MonoBehaviour
     {
-        public string relayUrl = "ws://192.168.0.28:8080/schema-stream";
+        public string relayUrl = "ws://localhost:8080";
         public DynamicUIManager uiManager;
+        
+        private WebSocket websocket;
 
-        // Note: For a robust implementation in Unity, use a WebSocket library 
-        // like NativeWebSocket or UnityWebSocket. We mock the event loop here.
-
-        private void Start()
+        async void Start()
         {
             Debug.Log($"[TelemetryRelay] Connecting to Relay API at {relayUrl}");
-            // ConnectWebSocket();
+            websocket = new WebSocket(relayUrl);
+
+            websocket.OnOpen += () =>
+            {
+                Debug.Log("[TelemetryRelay] Connection open!");
+            };
+
+            websocket.OnError += (e) =>
+            {
+                Debug.LogError("[TelemetryRelay] Error! " + e);
+            };
+
+            websocket.OnClose += (e) =>
+            {
+                Debug.Log("[TelemetryRelay] Connection closed!");
+            };
+
+            websocket.OnMessage += (bytes) =>
+            {
+                var message = System.Text.Encoding.UTF8.GetString(bytes);
+                // Debug.Log($"[TelemetryRelay] Received {bytes.Length} bytes.");
+                
+                if (uiManager != null)
+                {
+                    // The UI Toolkit changes must be scheduled on the main thread
+                    // Since NativeWebSocket's DispatchMessageQueue is called in Update(), 
+                    // it is safe to interact with Unity objects here.
+                    uiManager.OnSchemaReceived(message);
+                }
+            };
+
+            await websocket.Connect();
         }
 
-        // Mock method to simulate receiving a payload from the backend
-        public void SimulateIncomingSchema(string jsonPayload)
+        void Update()
         {
-            if (uiManager != null)
+            #if !UNITY_WEBGL || UNITY_EDITOR
+            if (websocket != null)
             {
-                uiManager.OnSchemaReceived(jsonPayload);
+                // This dispatches the events (OnMessage, OnOpen, etc) on the main thread
+                websocket.DispatchMessageQueue();
+            }
+            #endif
+        }
+
+        private async void OnApplicationQuit()
+        {
+            if (websocket != null)
+            {
+                await websocket.Close();
             }
         }
     }

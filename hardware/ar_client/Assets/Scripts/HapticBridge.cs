@@ -15,8 +15,6 @@ namespace Meridian.AR
 
         public void ProcessHapticElement(UIElement hapticElement)
         {
-            // Calculate distance from Quest hand position to the spatial target
-            // In a real implementation, we query the OVRHand or similar Quest SDK component
             float mockDistanceToTarget = 0.5f; 
 
             if (hapticElement.type == "Error_Alert")
@@ -25,8 +23,6 @@ namespace Meridian.AR
                 return;
             }
 
-            // Haptic_Beacon logic
-            // Modulate the haptic intensity based on proximity to the spatial position
             if (mockDistanceToTarget < 1.0f)
             {
                 float intensityMultiplier = 1.0f - mockDistanceToTarget; // Closer = stronger
@@ -40,7 +36,6 @@ namespace Meridian.AR
         private void TriggerErrorPulse(UIElement element)
         {
             Debug.Log("[HapticBridge] ERROR ALERT Triggered! Sending max amplitude pulse to wrist_puck.");
-            // Send max amplitude buzz pattern
             DispatchMqttPulse(300.0f, 1.0f, "Solid_Buzz");
         }
 

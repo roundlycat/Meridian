@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ui:UXML
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:ui="UnityEngine.UIElements"
+    xsi:noNamespaceSchemaLocation="../../UIElementsSchema/UIElements.xsd">
+    
+    <ui:VisualElement class="telemetry-card">
+        <ui:Label name="card-title" text="Telemetry Title" class="card-title" />
+        <ui:Label name="card-value" text="Telemetry Value" class="card-value" />
+    </ui:VisualElement>
+</ui:UXML>
