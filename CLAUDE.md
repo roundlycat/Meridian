@@ -8,32 +8,41 @@ Inferno → relay-api (WebSocket) → Unity AR client. v1 (`sensor_ecology`) is
 and `sensor_ecology/docs/MERIDIAN_V2_RESTRUCTURE.md` (to be imported into `Docs/adr/`).
 Per-slice lessons accrue in `Docs/lessons/` — read them before extending a slice.
 
-## Current slice: A — "Nothing is lost" (durability spine)
+## Current slice: B — "Nothing is claimed" (honest motif lifecycle)
 
-The spine that makes every other slice safe to retry blindly. ADR-003 items 1, 3, 6, 9.
+Structure is EARNED off the hot path, never asserted at observation time.
+ADR-003 items 2, 4 + the v1 data inheritance. Demo = replay the 284,399-event
+seed corpus through the promotion gates; the diff between *earned* motifs and v1's
+31 *asserted* ones is the research result.
 
-- [x] `sensor_readings` `UNIQUE(node_id, seq)` + `INSERT … ON CONFLICT DO NOTHING` — proven
-- [x] SQLite WAL spool on Sensor Pi (.25) — deployed, forwards upstream (spool forwards, not a bridge)
-- [x] `pg_notify` trigger + single LISTEN loop in relay; SSE polling path gone — proven
-- [x] single `meridian.env` + embedder-dim check at startup — proven
-- [x] **closing gate:** outage demo **passed 120 / 120 / 120** (2026-06-15) — see `Docs/lessons/slice-a-nothing-is-lost.md`
+- [ ] `schemas/002_motif_lifecycle.sql` — candidate→motif→dormant state machine, evidence, transitions, labels, FK-complete resonance, `motif_graph_stats` mat-view
+- [ ] `seed/replay.py` — load seed `perceptual_events` (intact embeddings) into v2
+- [ ] promotion job — HDBSCAN clustering + 4 gates (members/span/sources/stability) + explicit transitions with evidence snapshots; labels are decoration, refresh the mat-view
+- [ ] compare earned vs v1's 31 asserted motifs → research result
+- [ ] live embedding producer (raw → `perceptual_events`, local nomic, asserts nothing) — the relay already listens; *after* the demo
+- [ ] **closing gate:** the replay demo recorded in `Docs/lessons/`
 
-**✅ Slice A is CLOSED.** The durability spine survived an induced broker outage
-(and a full Inferno reboot) with zero loss and zero duplicates. **Next: Slice B —
-"Nothing is claimed."** First move (per the lessons file): build the embedding
-producer (raw events → `perceptual_events`, local nomic 768, asserting nothing) —
-the piece the relay already listens for — then the promotion job's four gates,
-then `seed/replay.py` over the 284,399-event corpus.
+**Demo:** replay 284,399 v1 events; watch which motifs survive the gates, each
+with its evidence snapshot. Replay reuses the seed's stored embeddings (no
+re-embedding — that's why they were preserved).
 
-**One slice in flight at a time.** Slices B (honest motif lifecycle) and C (pod
-first contact) are scoped but NOT started — do not build ahead of the demo.
+> **✅ Slice A — "Nothing is lost" — CLOSED** (2026-06-15, outage demo 120/120/120).
+> Durability spine survived a broker outage and a full reboot. See
+> `Docs/lessons/slice-a-nothing-is-lost.md`.
+
+**One slice in flight at a time.** Slice C (pod first contact) is scoped but NOT
+started — do not build ahead of B's demo.
 
 ## What's running where
 
-- **Inferno (192.168.0.28):** PostgreSQL 17 (`meridian` db), Ollama
-  (`nomic-embed-text`, 768-dim), mosquitto. Shared infra; v1 used the same boxes.
-- **Sensor Pi (.25):** local mosquitto + SQLite spool — Slice A target, not built yet.
-- **v2 services:** none deployed yet. Slice A's ingestion + relay are the first.
+- **Inferno (192.168.0.28):** the `meridian` db runs in a **pgvector pg17 Docker
+  container** (`meridian-postgres`, host port **5544**), isolated from the frozen
+  v1 native `postgresql@17`. Plus Ollama (`nomic-embed-text`, 768-dim) + mosquitto.
+  `docker` needs `sudo` unless your shell is in the docker group.
+- **Sensor Pi (.25, `raspberrypi`):** local mosquitto + `services/spool` (SQLite
+  WAL) — deployed and proven. v1's old `mosquitto` conf is `.disabled`.
+- **v2 services:** `services/ingestion` + `services/relay` on Inferno, `services/spool`
+  on the Pi. Run by hand from `~/Meridian` (no systemd units yet).
 - **Unity AR client:** unchanged from v1 — speaks the same ws-bridge WebSocket
   contract, repointed at v2's relay. Not rewritten (garden-phase work).
 
