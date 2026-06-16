@@ -23,6 +23,8 @@ _KNOWN_KEYS = (
     "MQTT_HOST", "MQTT_PORT", "RELAY_HOST", "RELAY_PORT", "NOTIFY_CHANNEL",
     "RAW_RETENTION_DAYS",
     "SPOOL_LOCAL_MQTT_HOST", "SPOOL_LOCAL_MQTT_PORT", "SPOOL_DB_PATH",
+    "PROMOTION_MIN_MEMBERS", "PROMOTION_MIN_SPAN_HOURS",
+    "PROMOTION_MIN_SOURCES", "PROMOTION_STABILITY_EPSILON",
 )
 
 
@@ -75,6 +77,12 @@ class Config:
     spool_local_mqtt_host: str
     spool_local_mqtt_port: int
     spool_db_path: str
+    # Promotion gates (Slice B). Thresholds a candidate cluster must clear to earn
+    # motif status.
+    promotion_min_members: int
+    promotion_min_span_hours: float
+    promotion_min_sources: int
+    promotion_stability_epsilon: float
 
 
 def load_config() -> Config:
@@ -103,4 +111,8 @@ def load_config() -> Config:
         spool_local_mqtt_host=raw.get("SPOOL_LOCAL_MQTT_HOST", "localhost"),
         spool_local_mqtt_port=int(raw.get("SPOOL_LOCAL_MQTT_PORT", "1883")),
         spool_db_path=raw.get("SPOOL_DB_PATH", "/var/lib/meridian/spool.db"),
+        promotion_min_members=int(raw.get("PROMOTION_MIN_MEMBERS", "12")),
+        promotion_min_span_hours=float(raw.get("PROMOTION_MIN_SPAN_HOURS", "72")),
+        promotion_min_sources=int(raw.get("PROMOTION_MIN_SOURCES", "2")),
+        promotion_stability_epsilon=float(raw.get("PROMOTION_STABILITY_EPSILON", "0.05")),
     )

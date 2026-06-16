@@ -3,3 +3,5 @@ asyncpg>=0.29
 aiomqtt>=2.0      # async MQTT client (wraps paho); ingestion
 websockets>=11    # relay WebSocket fan-out
 aiohttp>=3.9      # Ollama embedding calls (embedding step)
+numpy>=1.24       # promotion job: embedding math
+scikit-learn>=1.3 # promotion job: HDBSCAN clustering (sklearn.cluster.HDBSCAN)
