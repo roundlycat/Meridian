@@ -16,11 +16,14 @@ The spine that makes every other slice safe to retry blindly. ADR-003 items 1, 3
 - [x] SQLite WAL spool on Sensor Pi (.25) — deployed, forwards upstream (spool forwards, not a bridge)
 - [x] `pg_notify` trigger + single LISTEN loop in relay; SSE polling path gone — proven
 - [x] single `meridian.env` + embedder-dim check at startup — proven
-- [ ] **closing gate:** the falsifiable outage demo recorded in `Docs/lessons/slice-a-nothing-is-lost.md`
+- [x] **closing gate:** outage demo **passed 120 / 120 / 120** (2026-06-15) — see `Docs/lessons/slice-a-nothing-is-lost.md`
 
-**Demo — the slice is done when this passes, not when the code is pretty:**
-pull Inferno's power mid-stream. After recovery, row counts match what the edge
-nodes emitted. v1 could not pass this; v2 must. (Build is complete; run + record.)
+**✅ Slice A is CLOSED.** The durability spine survived an induced broker outage
+(and a full Inferno reboot) with zero loss and zero duplicates. **Next: Slice B —
+"Nothing is claimed."** First move (per the lessons file): build the embedding
+producer (raw events → `perceptual_events`, local nomic 768, asserting nothing) —
+the piece the relay already listens for — then the promotion job's four gates,
+then `seed/replay.py` over the 284,399-event corpus.
 
 **One slice in flight at a time.** Slices B (honest motif lifecycle) and C (pod
 first contact) are scoped but NOT started — do not build ahead of the demo.

@@ -1,6 +1,6 @@
 # Slice A — "Nothing is lost" (durability spine)
 
-**Status:** core built and proven; demo result recorded below.
+**Status:** CLOSED — outage demo passed 120 / 120 / 120 (2026-06-15).
 **Built:** 2026-06-14 → 2026-06-15.
 **ADR-003 items:** 1 (idempotent ingestion), 3 (LISTEN/NOTIFY relay), 6 (Pi spool), 9 (single config + dim gate).
 
@@ -47,11 +47,14 @@ Inferno mid-stream for several minutes; on recovery, the spool drains and the
 counts must agree.
 
 ```
-Pi   : sqlite spool   total = ____   forwarded = ____
-Inferno: sensor_readings(node='sim-pod') = ____
+Pi   : sqlite spool   total = 120   forwarded = 120
+Inferno: sensor_readings(node='sim-pod') = 120
 ```
-**Result:** <!-- fill in actual numbers after the run; expected 120/120/120 -->
-Pass = all three equal across an induced outage. <!-- update Status line above once recorded -->
+**Result (2026-06-15): 120 / 120 / 120 — PASS.** During a ~60 s broker outage the
+spool held the readings on disk (its log showed `pending` climbing to ~85), then
+drained them on recovery; idempotent ingestion absorbed the re-forwards with zero
+duplicates (`0 new / 1 received` on the second pass). Bonus: survived a full
+Inferno reboot — the pgvector volume persisted and the count was still 120.
 
 ---
 
