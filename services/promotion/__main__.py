@@ -252,8 +252,10 @@ async def main(sample_cap: int, assign_dist: float) -> None:
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser(description="Promotion job — earn motifs from evidence")
-    ap.add_argument("--cluster-sample", type=int, default=40000,
-                    help="max events to cluster directly (rest assigned to nearest); default 40000")
+    ap.add_argument("--cluster-sample", type=int, default=12000,
+                    help="max events to cluster directly (rest assigned to nearest); default 12000. "
+                         "HDBSCAN on 768-dim is superlinear; >~15k gets slow on this hardware. For a "
+                         "full-corpus cluster, reduce dims first (PCA→~50) — ask if you want that path.")
     ap.add_argument("--assign-dist", type=float, default=0.10,
                     help="max cosine distance to assign an event to a cluster; default 0.10 "
                          "(tightened from 0.15 to stop merging distinct states into one blob)")
