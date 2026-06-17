@@ -5,10 +5,15 @@ Clusters the perceptual_events embeddings, applies four gates, and promotes only
 clusters that EARN motif status — each transition recorded with the evidence
 snapshot that justified it. Nothing is asserted; structure is measured.
 
-Gates (thresholds from meridian.env):
+Gates (thresholds from meridian.env). HARD gates = members + recurrence + stability:
   members    : >= PROMOTION_MIN_MEMBERS distinct events
-  span       : evidence spans >= PROMOTION_MIN_SPAN_HOURS  (one afternoon can't be a motif)
-  sources    : >= PROMOTION_MIN_SOURCES distinct nodes-or-domains
+  recurrence : evidence appears on >= PROMOTION_MIN_RECURRENCE_DAYS distinct days
+               — the "actually recurring, not a one-off / not a single continuous
+               drift" signal. (Replaces ADR-003's spatial `sources` gate, which the
+               Slice B investigation showed is the wrong evidence model for a
+               type-siloed single-home field — see Docs/lessons/slice-b-*. `span`
+               and `sources` are still computed and stored in the evidence snapshot,
+               but they are NOT hard gates.)
   stability  : centroid moved < PROMOTION_STABILITY_EPSILON (cosine) since last run
                — so a candidate must persist across two runs to promote. Time-delayed
                by design; on a static replay corpus, run TWICE (run 1 seeds candidates
@@ -145,10 +150,12 @@ async def main(sample_cap: int, assign_dist: float) -> None:
             source_count = max(len(node_set), len(domain_set))
             mtimes = [times[j] for j in members if times[j] is not None]
             span_h = ((max(mtimes) - min(mtimes)).total_seconds() / 3600.0) if mtimes else 0.0
+            recurrence_days = len({t.date() for t in mtimes})
 
             members_ok = len(members) >= cfg.promotion_min_members
-            span_ok = span_h >= cfg.promotion_min_span_hours
-            sources_ok = source_count >= cfg.promotion_min_sources
+            recurrence_ok = recurrence_days >= cfg.promotion_min_recurrence_days
+            span_ok = span_h >= cfg.promotion_min_span_hours          # informational
+            sources_ok = source_count >= cfg.promotion_min_sources    # informational
 
             # Identity / stability: nearest existing motif within MATCH_DIST is "the same".
             match, drift = None, None
@@ -160,17 +167,18 @@ async def main(sample_cap: int, assign_dist: float) -> None:
                     drift = float(d[j])
             stability_ok = match is not None and drift < cfg.promotion_stability_epsilon
 
-            gates_pass = members_ok and span_ok and sources_ok
+            gates_pass = members_ok and recurrence_ok          # hard gates (sources/span are info)
             to_state = "motif" if (gates_pass and stability_ok) else "candidate"
 
             evidence = {
                 "members": int(len(members)), "min_members": cfg.promotion_min_members,
-                "span_hours": round(span_h, 1), "min_span_hours": cfg.promotion_min_span_hours,
-                "sources": source_count, "min_sources": cfg.promotion_min_sources,
+                "recurrence_days": recurrence_days, "min_recurrence_days": cfg.promotion_min_recurrence_days,
+                "span_hours": round(span_h, 1),          # informational
+                "sources": source_count,                  # informational
                 "drift": (round(drift, 4) if drift is not None else None),
                 "stability_epsilon": cfg.promotion_stability_epsilon,
-                "gates": {"members": members_ok, "span": span_ok,
-                          "sources": sources_ok, "stability": stability_ok},
+                "gates": {"members": members_ok, "recurrence": recurrence_ok,
+                          "stability": stability_ok},
             }
 
             async with conn.transaction():
@@ -246,7 +254,8 @@ if __name__ == "__main__":
     ap = argparse.ArgumentParser(description="Promotion job — earn motifs from evidence")
     ap.add_argument("--cluster-sample", type=int, default=40000,
                     help="max events to cluster directly (rest assigned to nearest); default 40000")
-    ap.add_argument("--assign-dist", type=float, default=0.15,
-                    help="max cosine distance to assign an event to a cluster; default 0.15")
+    ap.add_argument("--assign-dist", type=float, default=0.10,
+                    help="max cosine distance to assign an event to a cluster; default 0.10 "
+                         "(tightened from 0.15 to stop merging distinct states into one blob)")
     args = ap.parse_args()
     asyncio.run(main(args.cluster_sample, args.assign_dist))

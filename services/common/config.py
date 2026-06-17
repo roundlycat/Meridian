@@ -25,6 +25,7 @@ _KNOWN_KEYS = (
     "SPOOL_LOCAL_MQTT_HOST", "SPOOL_LOCAL_MQTT_PORT", "SPOOL_DB_PATH",
     "PROMOTION_MIN_MEMBERS", "PROMOTION_MIN_SPAN_HOURS",
     "PROMOTION_MIN_SOURCES", "PROMOTION_STABILITY_EPSILON",
+    "PROMOTION_MIN_RECURRENCE_DAYS",
 )
 
 
@@ -80,9 +81,10 @@ class Config:
     # Promotion gates (Slice B). Thresholds a candidate cluster must clear to earn
     # motif status.
     promotion_min_members: int
-    promotion_min_span_hours: float
-    promotion_min_sources: int
+    promotion_min_span_hours: float          # informational since the recurrence recalibration
+    promotion_min_sources: int               # informational (type-siloed field; see Slice B lesson)
     promotion_stability_epsilon: float
+    promotion_min_recurrence_days: int       # the real "not a fluke" gate
 
 
 def load_config() -> Config:
@@ -115,4 +117,5 @@ def load_config() -> Config:
         promotion_min_span_hours=float(raw.get("PROMOTION_MIN_SPAN_HOURS", "72")),
         promotion_min_sources=int(raw.get("PROMOTION_MIN_SOURCES", "2")),
         promotion_stability_epsilon=float(raw.get("PROMOTION_STABILITY_EPSILON", "0.05")),
+        promotion_min_recurrence_days=int(raw.get("PROMOTION_MIN_RECURRENCE_DAYS", "5")),
     )
