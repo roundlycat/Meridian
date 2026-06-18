@@ -88,7 +88,7 @@ async def _load_events(conn):
     return ids, nodes, domains, times, _normalize(vecs)
 
 
-def _cluster(vecs: np.ndarray, min_members: int, sample_cap: int):
+def _cluster(vecs: np.ndarray, min_cluster_size: int, sample_cap: int):
     n = len(vecs)
     rng = np.random.default_rng(RNG_SEED)
     if n > sample_cap:
@@ -97,7 +97,9 @@ def _cluster(vecs: np.ndarray, min_members: int, sample_cap: int):
     else:
         sample_idx = np.arange(n)
         log.info("clustering on all %d events", n)
-    labels = HDBSCAN(min_cluster_size=min_members, metric="euclidean").fit_predict(vecs[sample_idx])
+    # min_cluster_size is the GRANULARITY knob — decoupled from the gate floor
+    # (promotion_min_members). Raise it to coarsen an over-fragmented baseline.
+    labels = HDBSCAN(min_cluster_size=min_cluster_size, metric="euclidean").fit_predict(vecs[sample_idx])
 
     centroids = []
     for lab in sorted(set(labels) - {-1}):
@@ -114,12 +116,12 @@ async def _existing_motifs(conn):
              "centroid": _parse_vec(r["c"])} for r in rows]
 
 
-async def main(sample_cap: int, assign_dist: float) -> None:
+async def main(sample_cap: int, assign_dist: float, min_cluster_size: int) -> None:
     cfg = load_config()
     conn = await asyncpg.connect(cfg.database_url)
     try:
         ids, nodes, domains, times, vecs = await _load_events(conn)
-        centroids = _cluster(vecs, cfg.promotion_min_members, sample_cap)
+        centroids = _cluster(vecs, min_cluster_size, sample_cap)
         if len(centroids) == 0:
             log.warning("no clusters formed; nothing to promote")
             return
@@ -259,5 +261,8 @@ if __name__ == "__main__":
     ap.add_argument("--assign-dist", type=float, default=0.10,
                     help="max cosine distance to assign an event to a cluster; default 0.10 "
                          "(tightened from 0.15 to stop merging distinct states into one blob)")
+    ap.add_argument("--min-cluster-size", type=int, default=100,
+                    help="HDBSCAN min_cluster_size — the GRANULARITY knob (decoupled from the "
+                         "members gate). Default 100; raise to coarsen an over-fragmented baseline.")
     args = ap.parse_args()
-    asyncio.run(main(args.cluster_sample, args.assign_dist))
+    asyncio.run(main(args.cluster_sample, args.assign_dist, args.min_cluster_size))
