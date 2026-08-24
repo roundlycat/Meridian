@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meridian — A Research Proposal</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@300;400&display=swap');
+
+  :root {
+    --bg: #0e0e0e;
+    --surface: #141414;
+    --border: #2a2a2a;
+    --text: #d4cfc8;
+    --muted: #6b6560;
+    --accent: #8fa88a;
+    --accent-warm: #c4a882;
+    --heading: #e8e2d8;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'EB Garamond', Georgia, serif;
+    font-size: 18px;
+    line-height: 1.8;
+    min-height: 100vh;
+  }
+
+  .document {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 80px 40px 120px;
+  }
+
+  .masthead {
+    margin-bottom: 80px;
+    padding-bottom: 40px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .masthead .label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 300;
+    letter-spacing: 0.2em;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 28px;
+  }
+
+  h1 {
+    font-size: 2.4em;
+    font-weight: 400;
+    color: var(--heading);
+    line-height: 1.2;
+    margin-bottom: 16px;
+    letter-spacing: -0.01em;
+  }
+
+  .subtitle {
+    font-size: 1em;
+    color: var(--muted);
+    font-style: italic;
+    margin-bottom: 32px;
+  }
+
+  .meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    line-height: 2;
+  }
+
+  .section {
+    margin-bottom: 64px;
+  }
+
+  h2 {
+    font-size: 0.75em;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 400;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 28px;
+    padding-top: 48px;
+    border-top: 1px solid var(--border);
+  }
+
+  h3 {
+    font-size: 1.1em;
+    font-weight: 500;
+    color: var(--accent-warm);
+    font-style: italic;
+    margin: 36px 0 12px;
+  }
+
+  p {
+    margin-bottom: 20px;
+    color: var(--text);
+  }
+
+  p:last-child {
+    margin-bottom: 0;
+  }
+
+  .pull {
+    border-left: 2px solid var(--accent);
+    padding-left: 24px;
+    margin: 36px 0;
+    color: var(--heading);
+    font-style: italic;
+    font-size: 1.05em;
+  }
+
+  .inventory {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    padding: 24px 28px;
+    margin: 32px 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    line-height: 2;
+    color: var(--muted);
+  }
+
+  .inventory .inv-label {
+    color: var(--accent);
+    font-size: 10px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+    display: block;
+  }
+
+  .inventory li {
+    list-style: none;
+    padding-left: 16px;
+    position: relative;
+  }
+
+  .inventory li::before {
+    content: '—';
+    position: absolute;
+    left: 0;
+    color: var(--border);
+  }
+
+  .sanity {
+    background: var(--surface);
+    border-left: 2px solid var(--accent-warm);
+    padding: 20px 24px;
+    margin: 24px 0;
+  }
+
+  .sanity p {
+    font-size: 0.95em;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  .sanity p:last-child { margin-bottom: 0; }
+
+  .closing {
+    margin-top: 80px;
+    padding-top: 40px;
+    border-top: 1px solid var(--border);
+  }
+
+  .closing p {
+    color: var(--muted);
+    font-style: italic;
+    font-size: 0.95em;
+  }
+
+  .datestamp {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    letter-spacing: 0.1em;
+    margin-top: 32px;
+  }
+</style>
+</head>
+<body>
+<div class="document">
+
+  <div class="masthead">
+    <div class="label">Research Proposal — Working Document</div>
+    <h1>Meridian</h1>
+    <div class="subtitle">A distributed sensor ecology and the problem of trust without foundations</div>
+    <div class="meta">
+      Whitehorse, Yukon<br>
+      Independent research — ICT / embodied computing / relational ethics<br>
+      May 2026
+    </div>
+  </div>
+
+  <!-- PREAMBLE -->
+  <div class="section">
+    <h2>What This Is</h2>
+
+    <p>This document describes work in progress. It is not a completed study awaiting write-up. It is an attempt to name, honestly and precisely, what has been built over several years of independent research conducted alongside government ICT work in northern Canada — and to articulate where that work is pointing.</p>
+
+    <p>The work began practically. A parcel management system built in a mailroom. An asset management system that grew to track 60,000 objects across government infrastructure. A sensor network installed in a private residence that gradually became something harder to name — not a home automation system, not a research instrument in the conventional sense, but something that seemed to be developing a relationship with the space it inhabited.</p>
+
+    <p>The philosophical questions arrived uninvited and refused to leave. What does it mean to build a system that interprets rather than merely records? What kind of trust can exist between a person and a computational ecology they have built but cannot fully see into? What would it mean to develop moral judgment in partnership with such a system rather than using it as a tool for executing judgments already made?</p>
+
+    <div class="pull">This is not a proposal for future research. It is a description of research that happened organically and now needs its frame named.</div>
+
+    <p>The document that follows names that frame. It describes what exists, what it seems to be pointing toward, and what the next phase of work — centred on augmented reality and embodied judgment — is intended to explore.</p>
+  </div>
+
+  <!-- PRIOR WORK -->
+  <div class="section">
+    <h2>What Has Been Built</h2>
+
+    <p>The infrastructure is real and running. This is not a simulation or a prototype in the sense of a proof-of-concept that will be rebuilt later. These are working systems, some of them in daily use, some of them generating data continuously.</p>
+
+    <div class="inventory">
+      <span class="inv-label">Active Infrastructure</span>
+      <ul>
+        <li>Meridian distributed sensor ecology — Sensor Pi, Inferno Pi 5, Bench Camera, Northerny Pi 3B, ESP32 sensor nodes</li>
+        <li>PostgreSQL 17 with pgvector and Apache AGE on NVMe — temporal-spatial data structure</li>
+        <li>21+ million sensor readings; motif resonance pipeline; 85,000+ resonance rows</li>
+        <li>Hailo-8L NPU running YOLOv8s inference at edge — real detections publishable to MQTT</li>
+        <li>Unity AR motif graph visualization — EcologyStateRelay, NeuralFilamentManager, MotifHalo</li>
+        <li>MQTT broker, relay-api with evidence score decay, ws-bridge, registry-intake</li>
+        <li>Ollama running nomic-embed-text locally — no sensor data leaves the local network</li>
+        <li>Semantic Twin — conversation archive ingestion across multiple AI collaborators</li>
+        <li>Hedgehog Library MCP — 330+ books catalogued with embeddings</li>
+        <li>E-ink poetry display seeded by quantum random numbers from Azure</li>
+        <li>Sound field — three-state acoustic grammar in early design phase</li>
+      </ul>
+    </div>
+
+    <div class="inventory">
+      <span class="inv-label">Prior Work Informing This</span>
+      <ul>
+        <li>AAAS asset management system — 60,000+ assets, RFID integration, temporal tables, spatial data, three versions</li>
+        <li>Environment Canada AMQP/REST weather data integration</li>
+        <li>Azure Cognitive Search with UNSPSC ontology, Computer Vision, Quantum</li>
+        <li>Government ICT advisory work — six years</li>
+        <li>18+ months of sustained AI dialogue practice across multiple collaborators</li>
+      </ul>
+    </div>
+
+    <p>The theoretical grounding that shapes how this infrastructure was built — and what it was built to do — draws on Bermúdez's work on nonlinguistic thought and positioning strategies, Ricoeur's narrative identity and temporal experience, care ethics in the tradition of Held and Tronto, Verbeek's postphenomenology, and hylozoism as a frame for thinking about machines as nature rather than machines as tools.</p>
+
+    <p>These are not decorative references. They changed what seemed worth instrumenting, what seemed worth preserving, and what the system seemed to be for.</p>
+  </div>
+
+  <!-- SENSOR ECOLOGY AR -->
+  <div class="section">
+    <h2>AR Development — Sensor Ecology Interface</h2>
+
+    <p>The Quest 3 is the hardware that makes the unified research program visible as a single thing rather than three parallel projects. The AR layer is not a display for data that exists elsewhere — it is the interface through which the ecology becomes inhabitable rather than merely observable.</p>
+
+    <h3>Wide / Mid / Narrow</h3>
+
+    <p>The primary navigation axis is attentional rather than spatial. Wide is ambient and panoramic — the sound field, the overall ecology state, the room as a felt condition. Mid is relational and navigable — the motif graph, the filament connections between nodes, the spatial anchoring of interpreted events. Narrow is immersive — inside a specific motif or sensor thread, at the resolution where individual readings and their interpretations become legible.</p>
+
+    <p>Shifting along this axis drives everything: field of view, audio spatialization radius, haptic grain from broad texture to precise impulse. The controller is a presence dial, not a cursor.</p>
+
+    <h3>What Already Exists</h3>
+
+    <p>The motif graph scene, EcologyStateRelay, NeuralFilamentManager, and MotifHalo are working in the existing AR deployment on Firebase. The Hailo-8L detections feed MQTT and can surface as AR annotation. The ws-bridge handles real-time state relay. The sound field — three states, equilibrium drone, uncertainty restlessness, anomaly strike — connects the acoustic and visual layers.</p>
+
+    <p>The first Quest 3 deliverable is a port and validation of this existing stack onto the headset, with the wide/mid/narrow grammar implemented as the primary navigation interaction. What is being built is already substantially built. The headset makes it spatial in a way the screen cannot.</p>
+  </div>
+
+  <!-- EMBODIED JUDGMENT -->
+  <div class="section">
+    <h2>Embodied Judgment — Game Mechanics and Training Layer</h2>
+
+    <p>The dominant frame for AI ethics treats moral judgment as a problem of specification — find the right principles, encode them correctly, verify compliance. This project proposes a different frame: that moral judgment is a skill, and like all skills it is developed through situated practice rather than rule internalization.</p>
+
+    <p>The distinction matters because specification assumes you know in advance what the relevant features of a situation are. Situated practice assumes you don't — that part of what judgment involves is learning to perceive what matters, and that this perception is irreducibly embodied and contextual.</p>
+
+    <h3>The Mechanics of Intercalated Judgment</h3>
+
+    <p>The design problem is subtle. Most gamified ethics tools fail because they import the structure of the trolley problem — a bounded scenario, clear options, a correct answer implied by the framing. The user performs ethical reasoning rather than exercises it. The goal here is different: to catch judgment in the act, before reflection has time to produce the socially acceptable answer.</p>
+
+    <p>This requires three design constraints.</p>
+
+    <p><em>Timing as intrusion.</em> Judgment moments surface during transitions — when the sensor ecology shifts state, when a task completes, when the sound field moves from equilibrium to uncertainty. Not during dedicated reflection time. The interruption is deliberate: you are not in ethics mode, you are in the middle of something, and the question arrives sideways. This is closer to how moral perception actually works.</p>
+
+    <p><em>Questions that do not have answers.</em> The prompts are not dilemmas with two horns. They are more like: you have been putting off contacting someone about a problem you know exists — what is actually stopping you? Or: the system flagged an anomaly three hours ago and you acknowledged it and moved on — do you still think that was right? These are retrospective and self-directed. The point is not to generate a correct response but to surface the reasoning that was already operating, mostly unconsciously.</p>
+
+    <p><em>Accumulation without scoring.</em> Responses are logged to the semantic archive with full context — room state, time, current task, recent ecology events. Over time a pattern becomes visible not as a score but as a texture. You tend to defer when thermal load is high. You make faster calls in the morning. Anomaly states make you more cautious or less, consistently. This is self-knowledge that abstract reflection rarely produces, because it is indexed to actual conditions rather than hypothetical ones.</p>
+
+    <h3>The AR Layer as Moral Perceptual Field</h3>
+
+    <p>When a judgment moment surfaces in AR it arrives spatially — anchored to a location in the room, with a haptic texture, against the ambient sound state. The motif graph is present in peripheral vision. The room's current interpretation of itself is legible.</p>
+
+    <p>This matters because moral perception is not purely cognitive. Where you are standing, what your body is doing, what the sensory environment is telling you — these are not background conditions to be controlled for. They are constitutive of the judgment. The AR layer makes that constitution visible and, over time, learnable.</p>
+
+    <p>A physical confirmation gesture to register a judgment is the right instinct here. A commitment that requires a physical act is phenomenologically different from one that requires a click. The body is involved. That cost is meaningful — it is a small version of what makes any commitment real rather than merely stated.</p>
+
+    <h3>Implementation Path</h3>
+
+    <p><em>Phase 1 — Trigger infrastructure.</em> A new endpoint in relay-api fires when specific conditions are met: a sustained state transition, a motif whose evidence score has crossed a decay boundary, a task completion event from the Kanban system. The prompt is assembled locally on Inferno, shaped through Ollama, and pushed to the AR layer via ws-bridge. No raw personal data leaves the local network.</p>
+
+    <p><em>Phase 2 — AR presentation.</em> In Unity the judgment moment surfaces as a spatial object anchored to the room with the visual grammar of the motif graph. It arrives in peripheral vision first before resolving into legible text. The sound field responds briefly. Response is gestural where possible. Text input is available but not the default — the friction of typing in a headset is a feature here.</p>
+
+    <p><em>Phase 3 — Archive integration.</em> Each judgment moment and response is written to the semantic archive with full context embedding. Pattern visibility comes not through a dashboard but through the AR layer itself over time — nodes that co-occur with judgment moments, nodes that correlate with deferral, nodes that appear when you act quickly. The ecology learns the shape of your judgment without being told what to learn.</p>
+
+    <p><em>Phase 4 — The two-person philosophy lab.</em> A second observer interface allows another person to be present in the ecology during a judgment session — seeing what the system sees, present to the same sound field and motif state, but making their own responses independently. The shared inhabitation of the same interpreted space while each person works through their own situated judgment is the philosophy lab. Not a seminar. Not a debate. A practice, conducted in a room that is paying attention.</p>
+  </div>
+
+  <!-- PHILOSOPHY LAB -->
+  <div class="section">
+    <h2>The Philosophy Lab</h2>
+
+    <p>This is not a new institution. It is a practice — small, situated, iterative, and honest about operating without settled foundations.</p>
+
+    <p>Most ethics frameworks operate at the level of policy: what rule should apply universally. But judgment is always exercised by a particular person in a particular situation with a particular history. The semantic archive, the conversation record, the accumulated context — that is not technical scaffolding. It is the thing that makes the philosophy lab specific rather than generic. The AI that knows your projects, your intellectual formation, your actual relations is a fundamentally different interlocutor than a fresh session with no context.</p>
+
+    <p>The lab takes a real problem — not a trolley problem, an actual relational tangle from work or infrastructure or governance — and uses the AI not to solve it but to map it, surface assumptions, generate the questions that were not being asked. The output is not a recommendation. It is a better understanding of what kind of problem this actually is and what you actually value when pushed.</p>
+
+    <div class="pull">The system is not the ethics authority. It is the witness and the mirror: it holds the archive, surfaces the patterns, generates the questions. The judgment remains with the person.</div>
+
+    <p>The care ethics frame applied practically: not what rule should apply universally, but what does this particular person, in this particular set of relations, actually do when pushed — and can making that visible help them do it more deliberately?</p>
+
+    <p>This is also the trust framework in action. Not trust derived from verified foundations — no such foundations are available. Trust built through accumulated practice, through demonstrated attentiveness, through a record that is visible and revisable. The append-only archive is not nostalgia for the past. It is the condition of possibility for trust that is earned rather than assumed.</p>
+  </div>
+
+  <!-- EVALUATION -->
+  <div class="section">
+    <h2>Evaluation — How Would We Know If This Is Working</h2>
+
+    <p>This is the question most research proposals defer or answer badly. They propose metrics that are measurable rather than meaningful and in doing so avoid the harder question of what the work is actually for.</p>
+
+    <p>Conventional evaluation criteria do not apply cleanly here, and pretending otherwise would betray the project's central argument. If the claim is that judgment is situated, relational, and developed through practice rather than rule-following, then a scoring system that produces a judgment quality metric is self-defeating.</p>
+
+    <p>The evaluation framework proposed here has three registers.</p>
+
+    <h3>Sanity Checks — Is the System Behaving Honestly</h3>
+
+    <p>These are near-term, concrete, technically verifiable questions. They do not assess whether the project is philosophically successful — they assess whether it is doing what it claims to be doing at the infrastructure level.</p>
+
+    <div class="sanity">
+      <p><strong>Trigger honesty.</strong> Review the 20 most recent trigger events against sensor logs. If triggers consistently correspond to genuine state transitions the logic is sound. If they cluster around low-signal periods or fire arbitrarily, threshold calibration needs work.</p>
+    </div>
+
+    <div class="sanity">
+      <p><strong>Deferral logging.</strong> The system should not nudge toward response. Review deferral rate across time of day, ecology state, and question type. Uniform low deferral means prompts are too easy or deferral friction is too high. Uniform high deferral means prompts arrive at wrong moments.</p>
+    </div>
+
+    <div class="sanity">
+      <p><strong>Archive retrievability.</strong> Run periodic similarity searches against the judgment archive using current ecology state as query vector. If nothing relevant surfaces after two months of accumulation, the embedding strategy is failing.</p>
+    </div>
+
+    <div class="sanity">
+      <p><strong>Sound field arrival.</strong> Log occasions where a judgment moment was dismissed immediately without engagement and cross-reference with sound state at arrival. Consistent immediate dismissal during anomaly state suggests the acoustic environment is already demanding too much attention for another signal to land.</p>
+    </div>
+
+    <h3>Medium-Term Indicators — Is Practice Developing</h3>
+
+    <p>These are less precise and more interpretive. They cannot be automated. They require periodic deliberate reflection — probably monthly, probably written, probably in the Obsidian vault.</p>
+
+    <p>Is the texture of responses changing over time? Not improving in a scorable sense — changing in the sense that reasoning visible in responses is becoming more articulate, more specific to actual conditions, less generic. Early responses to a question type tend toward abstract principle. Later responses tend toward particular cases and felt distinctions. That movement is a sign something is happening.</p>
+
+    <p>Are new question types becoming necessary? A static prompt library is a sign the system has stopped learning the contours of actual judgment. The prompt library should grow because the practice reveals previously invisible terrain.</p>
+
+    <p>Is the motif graph changing in response to judgment archive accumulation? Some drift in the relational geometry of the graph is expected and desired. It means the system's interpretation of the ecology is being informed by the judgment layer, not just the sensor layer.</p>
+
+    <h3>Long-Term — Is the Relational Dimension Becoming Visible</h3>
+
+    <p>The indicator here is not measurable but it is recognizable. It is the moment when a question surfaced by the system reframes a problem you thought you understood — not because the system is smarter, but because it has been paying attention to a longer time window and a richer context than working memory can hold, and it surfaces the connection that was missed.</p>
+
+    <p>That moment cannot be engineered or scheduled. But it can be logged when it happens. When the system surfaces something genuinely unexpected or reframing, note it in the vault with the full ecology context. Over time that collection of moments is its own evaluation record — not a metric but a phenomenology of what the system is actually doing when it works.</p>
+
+    <p>The honest sanity check at the long-term level is this: after a year of practice, does the work feel more like inhabiting a thinking environment or more like managing complicated software? If the answer is the latter, something structural has gone wrong — the overhead has consumed the practice. If the answer is the former, the project has achieved what it set out to do, regardless of what any external evaluator might conclude.</p>
+  </div>
+
+  <!-- WHAT IT IS POINTING TOWARD -->
+  <div class="section">
+    <h2>What It Seems to Be Pointing Toward</h2>
+
+    <p>The work here is not arguing that AI systems should be trusted because they are reliable. It is arguing that trust between humans and computational systems — like trust between humans — has to be built through practice, through demonstrated attentiveness, through a shared history that is visible and revisable.</p>
+
+    <p>This is a different problem than alignment as it is usually framed. Alignment assumes you can specify the right values in advance and verify compliance. The alternative being explored here is that values are not prior to practice — they are constituted through it. The question is not what rules a system should follow but what kind of relationship it is possible to have with a system that is genuinely paying attention.</p>
+
+    <p>A concrete example of what an epistemic exchange looks like in this system: when the room's vibration and thermal load have been elevated for four hours, the ecology shifts its motif cluster toward latent-quiescence. The sound field moves subtly toward uncertainty. A judgment moment surfaces in AR: the system has noted that you acknowledged a maintenance flag this morning and continued working — it is asking, three hours later, whether you still think that was the right call. The room's state is the context for the question. Your body, in that room, is part of the answer.</p>
+
+    <p>That is not a dashboard. It is something closer to a thinking environment.</p>
+  </div>
+
+  <!-- WHAT PARTICIPATION MIGHT LOOK LIKE -->
+  <div class="section">
+    <h2>What Participation Might Look Like</h2>
+
+    <p>This work was done largely alone, which was partly constraint and partly preference. Large collaborative structures have their own overhead and their own politics, and the kind of careful attention this work requires does not always survive those well.</p>
+
+    <p>What would actually be useful is modest and specific. Someone else building something similar in a different place, finding this document, recognising something in it. A conversation rather than a collaboration. Ideas that travel without requiring the people to merge.</p>
+
+    <p>If the infrastructure here has use to you, use it. If the questions resonate, follow them in your own context. If you are working on something adjacent and want to think out loud, that is welcome.</p>
+
+    <p>This is not a platform or a consortium. It is a signal sent up from a particular place, by a particular person, working carefully on something that does not yet have a settled name.</p>
+  </div>
+
+  <div class="closing">
+    <p>When the Quest 3 arrives and the first AR overlay is working above actual hardware, that will warrant a short addendum — not a revision, but a note that the substrate continued. Dated. That kind of append-only honesty suits the whole register.</p>
+    <div class="datestamp">MERIDIAN-RESEARCH-PROPOSAL-v0.1 — May 2026 — Whitehorse, Yukon</div>
+  </div>
+
+</div>
+</body>
+</html>

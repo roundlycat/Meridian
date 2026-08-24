@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Assembly Session Log</title>
+    <style>
+        @media print {
+            @page {
+                margin: 0.75in;
+                size: letter;
+            }
+            body {
+                margin: 0;
+            }
+            .page-break {
+                page-break-after: always;
+            }
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.4;
+            max-width: 8.5in;
+            margin: 0 auto;
+            padding: 0.5in;
+        }
+        
+        h1 {
+            text-align: center;
+            border-bottom: 3px solid #333;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .section {
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            padding: 15px;
+            background-color: #f9f9f9;
+        }
+        
+        .section-title {
+            font-weight: bold;
+            font-size: 14pt;
+            margin-bottom: 10px;
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 5px;
+        }
+        
+        .field-row {
+            display: flex;
+            margin-bottom: 12px;
+            align-items: center;
+        }
+        
+        .field-label {
+            font-weight: bold;
+            min-width: 150px;
+            margin-right: 10px;
+        }
+        
+        .field-value {
+            flex: 1;
+            border-bottom: 1px solid #333;
+            min-height: 20px;
+            padding: 2px 5px;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        .checkbox {
+            width: 16px;
+            height: 16px;
+            border: 2px solid #333;
+            display: inline-block;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        
+        th, td {
+            border: 1px solid #333;
+            padding: 8px;
+            text-align: left;
+        }
+        
+        th {
+            background-color: #3498db;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .notes-area {
+            border: 1px solid #333;
+            min-height: 80px;
+            padding: 8px;
+            background-color: white;
+        }
+        
+        .small-text {
+            font-size: 9pt;
+            color: #666;
+            font-style: italic;
+        }
+        
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        
+        .header-field {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>ASSEMBLY SESSION LOG</h1>
+    
+    <div class="header-row">
+        <div class="header-field">
+            <span class="field-label">Session ID:</span>
+            <span class="field-value" style="width: 150px;"></span>
+        </div>
+        <div class="header-field">
+            <span class="field-label">Date:</span>
+            <span class="field-value" style="width: 100px;"></span>
+        </div>
+        <div class="header-field">
+            <span class="field-label">Time:</span>
+            <span class="field-value" style="width: 80px;"></span>
+        </div>
+    </div>
+    
+    <div class="field-row">
+        <span class="field-label">Agent Name:</span>
+        <span class="field-value"></span>
+    </div>
+    
+    <div class="field-row">
+        <span class="field-label">Location:</span>
+        <span class="field-value"></span>
+    </div>
+    
+    <div class="section">
+        <div class="section-title">MISSION CONTEXT</div>
+        
+        <div style="margin-bottom: 10px;">
+            <span class="field-label">Mission Type:</span>
+            <div class="checkbox-group">
+                <div class="checkbox-item"><span class="checkbox"></span> Fire Suppression</div>
+                <div class="checkbox-item"><span class="checkbox"></span> Maintenance</div>
+                <div class="checkbox-item"><span class="checkbox"></span> Training</div>
+                <div class="checkbox-item"><span class="checkbox"></span> Emergency Response</div>
+                <div class="checkbox-item"><span class="checkbox"></span> Routine Inspection</div>
+                <div class="checkbox-item"><span class="checkbox"></span> Other: <span style="border-bottom: 1px solid #333; width: 100px; display: inline-block;"></span></div>
+            </div>
+        </div>
+        
+        <div class="field-row">
+            <span class="field-label">Temperature:</span>
+            <span class="field-value" style="max-width: 80px;"></span>
+            <span style="margin: 0 10px;">°C</span>
+            <span class="field-label">Weather:</span>
+            <span class="field-value"></span>
+        </div>
+        
+        <div style="margin-bottom: 10px;">
+            <span class="field-label">Time of Day:</span>
+            <div class="checkbox-group">
+                <div class="checkbox-item"><span class="checkbox"></span> Day</div>
+                <div class="checkbox-item"><span class="checkbox"></span> Night</div>
+                <div class="checkbox-item"><span class="checkbox"></span> Dawn/Dusk</div>
+            </div>
+        </div>
+        
+        <div style="margin-bottom: 10px;">
+            <span class="field-label">Terrain:</span>
+            <div class="checkbox-group">
+                <div class="checkbox-item"><span class="checkbox"></span> Indoor</div>
+                <div class="checkbox-item"><span class="checkbox"></span> Outdoor</div>
+                <div class="checkbox-item"><span class="checkbox"></span> Wilderness</div>
+                <div class="checkbox-item"><span class="checkbox"></span> Urban</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="section">
+        <div class="section-title">ASSEMBLY PROCESS</div>
+        
+        <div class="field-row">
+            <span class="field-label">Kit Target:</span>
+            <span class="field-value"></span>
+            <span class="small-text" style="margin-left: 10px;">(e.g., "Fire-Kit-Alpha")</span>
+        </div>
+        
+        <div class="field-row">
+            <span class="field-label">Start Time:</span>
+            <span class="field-value" style="max-width: 80px;"></span>
+            <span class="field-label" style="margin-left: 20px;">End Time:</span>
+            <span class="field-value" style="max-width: 80px;"></span>
+            <span class="field-label" style="margin-left: 20px;">Duration:</span>
+            <span class="field-value" style="max-width: 80px;"></span>
+            <span style="margin-left: 5px;">minutes</span>
+        </div>
+    </div>
+    
+    <div class="section">
+        <div class="section-title">ITEMS NEEDED (from checklist)</div>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 5%;">#</th>
+                    <th style="width: 35%;">Item Description</th>
+                    <th style="width: 25%;">Tag/Serial Number</th>
+                    <th style="width: 15%;">Found</th>
+                    <th style="width: 15%;">Missing</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td>1</td><td></td><td></td><td style="text-align: center;"><span class="checkbox"></span></td><td style="text-align: center;"><span class="checkbox"></span></td></tr>
+                <tr><td>2</td><td></td><td></td><td style="text-align: center;"><span class="checkbox"></span></td><td style="text-align: center;"><span class="checkbox"></span></td></tr>
+                <tr><td>3</td><td></td><td></td><td style="text-align: center;"><span class="checkbox"></span></td><td style="text-align: center;"><span class="checkbox"></span></td></tr>
+                <tr><td>4</td><td></td><td></td><td style="text-align: center;"><span class="checkbox"></span></td><td style="text-align: center;"><span class="checkbox"></span></td></tr>
+                <tr><td>5</td><td></td><td></td><td style="text-align: center;"><span class="checkbox"></span></td><td style="text-align: center;"><span class="checkbox"></span></td></tr>
+                <tr><td>6</td><td></td><td></td><td style="text-align: center;"><span class="checkbox"></span></td><td style="text-align: center;"><span class="checkbox"></span></td></tr>
+                <tr><td>7</td><td></td><td></td><td style="text-align: center;"><span class="checkbox"></span></td><td style="text-align: center;"><span class="checkbox"></span></td></tr>
+                <tr><td>8</td><td></td><td></td><td style="text-align: center;"><span class="checkbox"></span></td><td style="text-align: center;"><span class="checkbox"></span></td></tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="section">
+        <div class="section-title">ITEMS ADDED (not on checklist)</div>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 35%;">Item Description</th>
+                    <th style="width: 25%;">Tag/Serial Number</th>
+                    <th style="width: 40%;">Reason for Adding</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td></td><td></td><td></td></tr>
+                <tr><td></td><td></td><td></td></tr>
+                <tr><td></td><td></td><td></td></tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="section">
+        <div class="section-title">ITEMS SUBSTITUTED</div>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 30%;">Original Item</th>
+                    <th style="width: 30%;">Substitute Item</th>
+                    <th style="width: 40%;">Reason for Substitution</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td></td><td></td><td></td></tr>
+                <tr><td></td><td></td><td></td></tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="section">
+        <div class="section-title">DELAYS / ISSUES</div>
+        
+        <div class="field-row">
+            <span class="field-label">Time spent searching:</span>
+            <span class="field-value" style="max-width: 100px;"></span>
+            <span style="margin-left: 5px;">minutes</span>
+        </div>
+        
+        <div class="field-row">
+            <span class="field-label">Items not found:</span>
+            <span class="field-value"></span>
+        </div>
+        
+        <div class="field-row">
+            <span class="field-label">Workarounds used:</span>
+            <span class="field-value"></span>
+        </div>
+        
+        <div class="field-row">
+            <span class="field-label">Unexpected problems:</span>
+            <span class="field-value"></span>
+        </div>
+    </div>
+    
+    <div class="section">
+        <div class="section-title">COMPLETION STATUS</div>
+        <div class="checkbox-group">
+            <div class="checkbox-item"><span class="checkbox"></span> Fully Complete - All required items present</div>
+            <div class="checkbox-item"><span class="checkbox"></span> Substantially Complete - Minor items missing, acceptable for mission</div>
+            <div class="checkbox-item"><span class="checkbox"></span> Incomplete - Major items missing, mission compromised</div>
+            <div class="checkbox-item"><span class="checkbox"></span> Exceeded Requirements - Added valuable extras</div>
+        </div>
+    </div>
+    
+    <div class="section">
+        <div class="section-title">AGENT NOTES</div>
+        <p class="small-text">Surprises, insights, suggestions for improvement:</p>
+        <div class="notes-area"></div>
+    </div>
+    
+    <div style="margin-top: 30px; text-align: center; font-size: 9pt; color: #666;">
+        <p>Adaptive Asset Assembly System (AAAS) - Baseline Data Collection Form v1.0</p>
+    </div>
+</body>
+</html>

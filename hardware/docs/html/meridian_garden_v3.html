@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meridian Garden — Site Plan v3</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Orbitron:wght@400;700&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #060d18;
+    color: #a8c4d8;
+    font-family: 'Share Tech Mono', monospace;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px 16px;
+    min-height: 100vh;
+  }
+
+  .header {
+    text-align: center;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #1a3050;
+    padding-bottom: 14px;
+    width: 100%;
+    max-width: 560px;
+  }
+
+  .header h1 {
+    font-family: 'Orbitron', monospace;
+    font-size: 13px;
+    letter-spacing: 4px;
+    color: #4ab8ff;
+    text-transform: uppercase;
+  }
+
+  .header p {
+    font-size: 9px;
+    color: #2a5070;
+    margin-top: 5px;
+    letter-spacing: 2px;
+  }
+
+  svg {
+    border: 1px solid #0f2840;
+    background: #070e1a;
+    box-shadow: 0 0 40px #0a2a5020;
+  }
+
+  .data-table {
+    margin-top: 18px;
+    width: 100%;
+    max-width: 560px;
+    border-collapse: collapse;
+    font-size: 10px;
+  }
+
+  .data-table th {
+    background: #0a1e30;
+    color: #4ab8ff;
+    padding: 5px 10px;
+    text-align: left;
+    border: 1px solid #0f2a44;
+    letter-spacing: 1px;
+  }
+
+  .data-table td {
+    padding: 4px 10px;
+    border: 1px solid #0f2a44;
+    color: #7a9ab0;
+  }
+
+  .data-table tr:nth-child(even) td { background: #080e18; }
+
+  .note {
+    margin-top: 10px;
+    font-size: 9px;
+    color: #2a5060;
+    max-width: 560px;
+    line-height: 1.7;
+    padding: 8px 12px;
+    border-left: 2px solid #1a4060;
+  }
+
+  .beds-section {
+    margin-top: 16px;
+    width: 100%;
+    max-width: 560px;
+  }
+
+  .beds-section h3 {
+    font-size: 9px;
+    color: #4ab8ff;
+    letter-spacing: 3px;
+    margin-bottom: 8px;
+  }
+
+  .bed-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 8px;
+  }
+
+  .bed-btn {
+    background: #0a1e2a;
+    border: 1px solid #1a5a3a;
+    color: #3aaa6a;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 9px;
+    padding: 5px 10px;
+    cursor: pointer;
+    letter-spacing: 1px;
+    transition: all 0.15s;
+  }
+
+  .bed-btn:hover { background: #0f2a1a; border-color: #3aaa6a; color: #5acc8a; }
+  .bed-btn.active { background: #0f2a1a; border-color: #5acc8a; color: #7adda8; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Meridian Garden — Site Plan</h1>
+  <p>WHITEHORSE YT &nbsp;·&nbsp; 2026-05-14 &nbsp;·&nbsp; v3 HAND MEASURED &nbsp;·&nbsp; SCALE 1:8 (1px≈1.2cm)</p>
+</div>
+
+<svg id="plan" width="520" height="680" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <!-- blueprint grid -->
+    <pattern id="smallgrid" width="12" height="12" patternUnits="userSpaceOnUse">
+      <path d="M 12 0 L 0 0 0 12" fill="none" stroke="#0c1e2e" stroke-width="0.5"/>
+    </pattern>
+    <pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse">
+      <rect width="60" height="60" fill="url(#smallgrid)"/>
+      <path d="M 60 0 L 0 0 0 60" fill="none" stroke="#0f2538" stroke-width="1"/>
+    </pattern>
+    <!-- north arrow marker -->
+    <marker id="arr" markerWidth="7" markerHeight="7" refX="3.5" refY="7" orient="auto">
+      <polygon points="3.5,0 7,7 3.5,5 0,7" fill="#4ab8ff"/>
+    </marker>
+    <!-- dim arrow -->
+    <marker id="da" markerWidth="5" markerHeight="5" refX="2.5" refY="2.5" orient="auto">
+      <polygon points="0,0 5,2.5 0,5" fill="#f07830"/>
+    </marker>
+    <marker id="da2" markerWidth="5" markerHeight="5" refX="2.5" refY="2.5" orient="auto-start-reverse">
+      <polygon points="0,0 5,2.5 0,5" fill="#f07830"/>
+    </marker>
+  </defs>
+
+  <!-- BACKGROUND GRID -->
+  <rect width="520" height="680" fill="url(#grid)"/>
+
+  <!-- ═══════════════════════════════════════════
+       YARD OUTLINE
+       L-shape: 208cm wide top (90cm), then 243cm wide
+       All scaled at S=1.2px/cm, origin (80,55)
+       Vertices (cm): (0,0)→(208,0)→(208,90)→(243,90)→(243,434)→(0,434)
+       In px: (80,55)→(330,55)→(330,163)→(372,163)→(372,576)→(80,576)
+  ═══════════════════════════════════════════ -->
+
+  <polygon
+    points="80,55 330,55 330,163 372,163 372,576 80,576"
+    fill="#0b1f10" stroke="#1e6a30" stroke-width="2.5"/>
+
+  <!-- inner yard glow -->
+  <polygon
+    points="80,55 330,55 330,163 372,163 372,576 80,576"
+    fill="none" stroke="#2a9a4020" stroke-width="8"/>
+
+  <!-- ═══════════════════════════════════════════
+       GARDEN CUPBOARD (top-right notch / d)
+       Occupies the step: x 330→372 (42px/35cm), y 55→163 (108px/90cm)
+  ═══════════════════════════════════════════ -->
+  <rect x="330" y="55" width="42" height="108"
+    fill="#081510" stroke="#1a4a20" stroke-width="1" stroke-dasharray="5,3"/>
+  <text x="351" y="104" text-anchor="middle" fill="#2a6a35" font-family="'Share Tech Mono',monospace" font-size="8">GARDEN</text>
+  <text x="351" y="115" text-anchor="middle" fill="#2a6a35" font-family="'Share Tech Mono',monospace" font-size="8">CUPBOARD</text>
+
+  <!-- ═══════════════════════════════════════════
+       HOUSE WALL (top)
+  ═══════════════════════════════════════════ -->
+  <rect x="80" y="48" width="250" height="9" fill="#2a3a5a" stroke="#3a5080" stroke-width="1"/>
+  <!-- back door -->
+  <rect x="94" y="46" width="38" height="11" fill="#c8a830" stroke="#f0d050" stroke-width="1.5"/>
+  <!-- door swing -->
+  <path d="M 94,55 A 38,38 0 0 1 132,55" fill="none" stroke="#f0d05050" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="113" y="41" text-anchor="middle" fill="#c8a830" font-family="'Share Tech Mono',monospace" font-size="9" letter-spacing="1">DOOR</text>
+
+  <!-- house wall label -->
+  <text x="205" y="43" text-anchor="middle" fill="#3a5080" font-family="'Share Tech Mono',monospace" font-size="8" letter-spacing="1">HOUSE WALL</text>
+
+  <!-- ═══════════════════════════════════════════
+       SHED (lower-right)
+       x: 147cm→243cm = px: 80+176=256 → 372
+       y: 290cm→434cm = px: 55+348=403 → 576
+       width: 116px (≈96cm), height: 173px (≈144cm)
+  ═══════════════════════════════════════════ -->
+  <rect x="256" y="403" width="116" height="173"
+    fill="#2a1a00" stroke="#c07800" stroke-width="2"/>
+  <!-- shed window (facing yard, on top wall) -->
+  <rect x="274" y="401" width="46" height="7" fill="#3a5a8a" stroke="#5a8acc" stroke-width="1"/>
+  <line x1="297" y1="401" x2="297" y2="408" stroke="#5a8acc" stroke-width="0.5"/>
+  <!-- shed window grid 2x2 -->
+  <rect x="268" y="416" width="44" height="44" fill="none" stroke="#c07800" stroke-width="1"/>
+  <line x1="290" y1="416" x2="290" y2="460" stroke="#c07800" stroke-width="0.5"/>
+  <line x1="268" y1="438" x2="312" y2="438" stroke="#c07800" stroke-width="0.5"/>
+  <!-- shed label -->
+  <text x="314" y="500" text-anchor="middle" fill="#c07800" font-family="'Share Tech Mono',monospace" font-size="12" font-weight="bold" letter-spacing="2">SHED</text>
+  <text x="314" y="514" text-anchor="middle" fill="#7a5000" font-family="'Share Tech Mono',monospace" font-size="8">96 × 144 cm</text>
+  <!-- window label -->
+  <text x="297" y="397" text-anchor="middle" fill="#4a6a9a" font-family="'Share Tech Mono',monospace" font-size="7">window</text>
+
+  <!-- ═══════════════════════════════════════════
+       GATE (bottom-left fence)
+  ═══════════════════════════════════════════ -->
+  <!-- gate opening in bottom fence, left side -->
+  <rect x="80" y="568" width="40" height="10" fill="#060d18" stroke="none"/>
+  <line x1="80" y1="571" x2="80" y2="579" stroke="#1e6a30" stroke-width="2.5"/>
+  <line x1="120" y1="571" x2="120" y2="579" stroke="#1e6a30" stroke-width="2.5"/>
+  <!-- gate swing arc -->
+  <path d="M 80,571 A 40,40 0 0 0 120,571" fill="none" stroke="#c8a83060" stroke-width="1" stroke-dasharray="3,2"/>
+  <text x="100" y="595" text-anchor="middle" fill="#8a7020" font-family="'Share Tech Mono',monospace" font-size="8">GATE</text>
+
+  <!-- ═══════════════════════════════════════════
+       HORIZONTAL DIVIDING LINE (290cm from top)
+       y = 55 + 290*1.2 = 55+348 = 403
+  ═══════════════════════════════════════════ -->
+  <line x1="80" y1="403" x2="256" y2="403" stroke="#1a4a25" stroke-width="1" stroke-dasharray="6,4"/>
+
+  <!-- ═══════════════════════════════════════════
+       BED PLACEHOLDERS (position TBD by Sean)
+       Shown as dashed outlines for placement
+  ═══════════════════════════════════════════ -->
+  <!-- Bed placeholder 1 — upper area -->
+  <rect x="95" y="75" width="140" height="220"
+    fill="#0a2010" stroke="#1a6a30" stroke-width="1" stroke-dasharray="6,3" opacity="0.6"/>
+  <text x="165" y="185" text-anchor="middle" fill="#1a6a30" font-family="'Share Tech Mono',monospace" font-size="9" opacity="0.7">BED A</text>
+  <text x="165" y="197" text-anchor="middle" fill="#1a6a30" font-family="'Share Tech Mono',monospace" font-size="8" opacity="0.6">~117×183cm</text>
+
+  <!-- Bed placeholder 2 — lower-left -->
+  <rect x="95" y="310" width="140" height="150"
+    fill="#0a2010" stroke="#1a6a30" stroke-width="1" stroke-dasharray="6,3" opacity="0.6"/>
+  <text x="165" y="388" text-anchor="middle" fill="#1a6a30" font-family="'Share Tech Mono',monospace" font-size="9" opacity="0.7">BED B</text>
+  <text x="165" y="400" text-anchor="middle" fill="#1a6a30" font-family="'Share Tech Mono',monospace" font-size="8" opacity="0.6">~117×125cm</text>
+
+  <!-- ═══════════════════════════════════════════
+       DIMENSION ANNOTATIONS
+  ═══════════════════════════════════════════ -->
+
+  <!-- Top width: 208cm -->
+  <line x1="80" y1="30" x2="330" y2="30" stroke="#f07830" stroke-width="1" marker-start="url(#da2)" marker-end="url(#da)"/>
+  <text x="205" y="24" text-anchor="middle" fill="#f07830" font-family="'Share Tech Mono',monospace" font-size="10">208 cm</text>
+
+  <!-- Full width: 243cm -->
+  <line x1="80" y1="595" x2="372" y2="595" stroke="#f07830" stroke-width="1" marker-start="url(#da2)" marker-end="url(#da)"/>
+  <text x="226" y="610" text-anchor="middle" fill="#f07830" font-family="'Share Tech Mono',monospace" font-size="10">243 cm</text>
+
+  <!-- Left fence: 434cm -->
+  <line x1="62" y1="55" x2="62" y2="576" stroke="#f07830" stroke-width="1" marker-start="url(#da2)" marker-end="url(#da)"/>
+  <text x="28" y="318" text-anchor="middle" fill="#f07830" font-family="'Share Tech Mono',monospace" font-size="10" transform="rotate(-90,28,318)">434 cm</text>
+
+  <!-- Right step height: 90cm -->
+  <line x1="388" y1="55" x2="388" y2="163" stroke="#f07830" stroke-width="1" marker-start="url(#da2)" marker-end="url(#da)"/>
+  <text x="400" y="109" fill="#f07830" font-family="'Share Tech Mono',monospace" font-size="9">90cm</text>
+
+  <!-- Step width: ~35cm (31 measured, ~35 by 243-208) -->
+  <line x1="330" y1="175" x2="372" y2="175" stroke="#f07830" stroke-width="1" marker-start="url(#da2)" marker-end="url(#da)"/>
+  <text x="351" y="188" text-anchor="middle" fill="#f07830" font-family="'Share Tech Mono',monospace" font-size="8">~35cm</text>
+
+  <!-- 147 division -->
+  <line x1="80" y1="415" x2="256" y2="415" stroke="#f0783066" stroke-width="1" marker-start="url(#da2)" marker-end="url(#da)"/>
+  <text x="168" y="428" text-anchor="middle" fill="#f07830" font-family="'Share Tech Mono',monospace" font-size="9">147 cm</text>
+
+  <!-- 96 shed width -->
+  <line x1="256" y1="415" x2="372" y2="415" stroke="#f0783066" stroke-width="1" marker-start="url(#da2)" marker-end="url(#da)"/>
+  <text x="314" y="428" text-anchor="middle" fill="#f07830" font-family="'Share Tech Mono',monospace" font-size="9">96 cm</text>
+
+  <!-- Shed depth: 144cm -->
+  <line x1="390" y1="403" x2="390" y2="576" stroke="#f07830" stroke-width="1" marker-start="url(#da2)" marker-end="url(#da)"/>
+  <text x="402" y="494" fill="#f07830" font-family="'Share Tech Mono',monospace" font-size="9">144cm</text>
+
+  <!-- ═══════════════════════════════════════════
+       NORTH ARROW
+  ═══════════════════════════════════════════ -->
+  <g transform="translate(462, 120)">
+    <circle cx="0" cy="0" r="18" fill="none" stroke="#1a3a5a" stroke-width="1"/>
+    <line x1="0" y1="22" x2="0" y2="-14" stroke="#4ab8ff" stroke-width="2" marker-end="url(#arr)"/>
+    <text x="0" y="30" text-anchor="middle" fill="#4ab8ff" font-family="'Share Tech Mono',monospace" font-size="11" font-weight="bold">N</text>
+  </g>
+
+  <!-- ═══════════════════════════════════════════
+       SCALE BAR  (60px = 50cm at S=1.2)
+  ═══════════════════════════════════════════ -->
+  <g transform="translate(80, 640)">
+    <rect x="0" y="0" width="60" height="7" fill="#4ab8ff"/>
+    <rect x="60" y="0" width="60" height="7" fill="none" stroke="#4ab8ff" stroke-width="1"/>
+    <rect x="120" y="0" width="60" height="7" fill="#4ab8ff" opacity="0.5"/>
+    <text x="0" y="20" fill="#4ab8ff" font-family="'Share Tech Mono',monospace" font-size="8">0</text>
+    <text x="52" y="20" fill="#4ab8ff" font-family="'Share Tech Mono',monospace" font-size="8">50cm</text>
+    <text x="112" y="20" fill="#4ab8ff" font-family="'Share Tech Mono',monospace" font-size="8">1.0m</text>
+    <text x="165" y="20" fill="#4ab8ff" font-family="'Share Tech Mono',monospace" font-size="8">1.5m</text>
+  </g>
+
+  <!-- ═══════════════════════════════════════════
+       TITLE BLOCK (lower-right)
+  ═══════════════════════════════════════════ -->
+  <rect x="410" y="540" width="100" height="56" fill="#06101a" stroke="#0f2840" stroke-width="1"/>
+  <text x="460" y="554" text-anchor="middle" fill="#4ab8ff" font-family="'Share Tech Mono',monospace" font-size="7" letter-spacing="1">MERIDIAN</text>
+  <text x="460" y="564" text-anchor="middle" fill="#4ab8ff" font-family="'Share Tech Mono',monospace" font-size="7" letter-spacing="1">GARDEN v3</text>
+  <line x1="410" y1="568" x2="510" y2="568" stroke="#0f2840" stroke-width="0.5"/>
+  <text x="460" y="579" text-anchor="middle" fill="#2a5070" font-family="'Share Tech Mono',monospace" font-size="6">YKT · 2026-05-14</text>
+  <text x="460" y="589" text-anchor="middle" fill="#2a5070" font-family="'Share Tech Mono',monospace" font-size="6">HAND MEASURED</text>
+
+</svg>
+
+<table class="data-table">
+  <tr><th>ELEMENT</th><th>DIMENSION</th><th>IMPERIAL</th><th>NOTES</th></tr>
+  <tr><td>House wall (top)</td><td>208 cm</td><td>6′10″</td><td>narrow end, back door upper-left</td></tr>
+  <tr><td>Main yard width</td><td>243 cm</td><td>7′11″</td><td>full width below the step</td></tr>
+  <tr><td>Left fence (total)</td><td>434 cm</td><td>14′3″</td><td>full yard depth</td></tr>
+  <tr><td>Top-right step down</td><td>90 cm</td><td>2′11″</td><td>cupboard notch height</td></tr>
+  <tr><td>Step jog (measured 31cm)</td><td>~35 cm</td><td>~1′2″</td><td>243 − 208 = 35; noted as 31 on sketch</td></tr>
+  <tr><td>Open yard width at shed</td><td>147 cm</td><td>4′10″</td><td>left of shed division</td></tr>
+  <tr><td>Shed width</td><td>96 cm</td><td>3′2″</td><td>lower-right</td></tr>
+  <tr><td>Shed depth</td><td>144 cm</td><td>4′9″</td><td>lower-right</td></tr>
+</table>
+
+<div class="note">
+  ⚠ BED A and BED B positions are placeholder estimates — confirm or reposition.<br>
+  ⚠ Step width noted as 31cm on sketch but 243−208=35cm; check with tape if needed.<br>
+  ⚠ Left strip width (zone c) not yet measured — let me know and I'll add it.<br>
+  Garden cupboard (d) shown as dashed outline in top-right notch.
+</div>
+
+</body>
+</html>

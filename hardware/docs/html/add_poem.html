@@ -1,0 +1,98 @@
+<!--
+Add Poem Template
+=================
+This template provides a form for adding new poems to the collection.
+
+Forms in Flask:
+- The action attribute tells the browser where to submit the form
+- The method="POST" tells it to use HTTP POST (not GET)
+- Flask will receive the data in request.form dictionary
+-->
+{% extends "base.html" %}
+
+{% block title %}Add New Poem{% endblock %}
+
+{% block content %}
+    <h2>Add a New Poem</h2>
+    
+    <!-- Information box with helpful tips -->
+    <div class="info-box">
+        <strong>Tips for adding poems:</strong>
+        <ul style="margin-left: 20px; margin-top: 10px;">
+            <li>Keep line breaks - they'll be preserved on the display</li>
+            <li>The e-ink display will scroll through longer poems</li>
+            <li>Test how it looks using "View Full Poem" before deploying</li>
+        </ul>
+    </div>
+    
+    <!--
+    Form to add a new poem
+    - action: where to send the form data (the add_poem route)
+    - method: POST (because we're creating data, not just viewing)
+    -->
+    <form action="{{ url_for('add_poem') }}" method="POST">
+        
+        <!-- Title input field -->
+        <label for="title">Poem Title:</label>
+        <input type="text" 
+               id="title" 
+               name="title" 
+               required 
+               placeholder="e.g., The Road Not Taken"
+               maxlength="200">
+        <!--
+        Attributes explained:
+        - id: used for the label's "for" attribute (accessibility)
+        - name: how Flask will access this value (request.form['title'])
+        - required: browser won't submit if empty
+        - placeholder: hint text shown in empty field
+        - maxlength: maximum characters allowed
+        -->
+        
+        <!-- Author input field -->
+        <label for="author">Author:</label>
+        <input type="text" 
+               id="author" 
+               name="author" 
+               required 
+               placeholder="e.g., Robert Frost"
+               maxlength="200">
+        
+        <!-- Poem text area -->
+        <label for="text">Poem Text:</label>
+        <textarea id="text" 
+                  name="text" 
+                  required 
+                  placeholder="Enter the poem here. Line breaks will be preserved."></textarea>
+        <!--
+        textarea vs input:
+        - textarea is for multi-line text
+        - input is for single-line text
+        - Both use the "name" attribute for Flask to access the data
+        -->
+        
+        <!-- Submit and Cancel buttons -->
+        <div style="margin-top: 20px;">
+            <button type="submit">Add Poem</button>
+            <a href="{{ url_for('index') }}" 
+               class="button" 
+               style="background-color: #95a5a6; margin-left: 10px;">
+                Cancel
+            </a>
+        </div>
+    </form>
+    
+    <!-- Example poem for testing -->
+    <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #ddd;">
+        <h3>Need a test poem?</h3>
+        <p style="color: #7f8c8d;">Try this classic haiku:</p>
+        <div class="poem-text" style="margin-top: 10px;">
+Title: An old silent pond
+Author: Matsuo Bashō
+
+An old silent pond
+A frog jumps into the pond—
+Splash! Silence again.
+        </div>
+    </div>
+{% endblock %}

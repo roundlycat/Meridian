@@ -1,0 +1,110 @@
+
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: var(--font-sans); }
+  .root { padding: 1rem 0; }
+  .header { margin-bottom: 1.5rem; }
+  .header h2 { font-size: 18px; font-weight: 500; color: var(--color-text-primary); }
+  .header p { font-size: 13px; color: var(--color-text-secondary); margin-top: 4px; }
+  .section-label { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; color: var(--color-text-tertiary); margin: 1.5rem 0 0.75rem; }
+  .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 10px; }
+  .grid-3 { display: grid; grid-template-columns: repeat(3, minmax(0,1fr)); gap: 10px; }
+  .card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1rem 1.25rem; }
+  .card-title { font-size: 13px; font-weight: 500; color: var(--color-text-primary); margin-bottom: 6px; }
+  .card-body { font-size: 12px; color: var(--color-text-secondary); line-height: 1.6; }
+  .badge { display: inline-block; font-size: 10px; font-weight: 500; padding: 2px 8px; border-radius: 4px; margin-bottom: 8px; }
+  .badge-working { background: #E6F1FB; color: #0C447C; }
+  .badge-blocked { background: #FAECE7; color: #712B13; }
+  .badge-ready { background: #EAF3DE; color: #27500A; }
+  .badge-idea { background: #EEEDFE; color: #3C3489; }
+  .status-row { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+  .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .dot-green { background: #639922; }
+  .dot-amber { background: #BA7517; }
+  .dot-red { background: #E24B4A; }
+  .dot-gray { background: #888780; }
+  .status-text { font-size: 11px; color: var(--color-text-secondary); }
+  .divider { border: none; border-top: 0.5px solid var(--color-border-tertiary); margin: 1.5rem 0; }
+  .purchase-row { display: flex; justify-content: space-between; align-items: baseline; padding: 6px 0; border-bottom: 0.5px solid var(--color-border-tertiary); }
+  .purchase-row:last-child { border-bottom: none; }
+  .purchase-name { font-size: 12px; color: var(--color-text-primary); }
+  .purchase-status { font-size: 11px; color: var(--color-text-secondary); }
+  .btn { font-size: 12px; padding: 6px 14px; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); background: transparent; color: var(--color-text-primary); cursor: pointer; margin-top: 10px; }
+  .btn:hover { background: var(--color-background-secondary); }
+  .merge-bar { display: grid; grid-template-columns: 1fr 24px 1fr; align-items: center; gap: 8px; margin-top: 10px; }
+  .env-pill { background: var(--color-background-secondary); border-radius: var(--border-radius-md); padding: 8px 10px; font-size: 11px; }
+  .env-pill .name { font-weight: 500; color: var(--color-text-primary); margin-bottom: 4px; }
+  .merge-arrow { text-align: center; font-size: 14px; color: var(--color-text-tertiary); }
+  .full-card { grid-column: 1 / -1; }
+</style>
+<div class="root">
+  <div class="header">
+    <h2>Afternoon session — Mon Mar 30</h2>
+    <p>AR haptics · sensor ecology · epistolary hardware</p>
+  </div>
+
+  <div class="section-label">AR HUD — convergence status</div>
+  <div class="card" style="margin-bottom: 10px;">
+    <div class="card-title">Stereoscopic HUD — two builds, one target</div>
+    <div class="merge-bar">
+      <div class="env-pill">
+        <div class="name">Firebase (deployed)</div>
+        <div class="status-row"><div class="dot dot-green"></div><span class="status-text">Camera passthrough ✓</span></div>
+        <div class="status-row"><div class="dot dot-red"></div><span class="status-text">Sensor link severed</span></div>
+      </div>
+      <div class="merge-arrow">→</div>
+      <div class="env-pill">
+        <div class="name">Local (192.168.0.25:9500)</div>
+        <div class="status-row"><div class="dot dot-green"></div><span class="status-text">Sensor overlays ✓</span></div>
+        <div class="status-row"><div class="dot dot-red"></div><span class="status-text">getUserMedia blocked (HTTP)</span></div>
+      </div>
+    </div>
+    <div class="card-body" style="margin-top: 12px;">Fix path: serve local over HTTPS via <code style="font-family: var(--font-mono); font-size: 11px;">mkcert</code> + nginx, or push sensor endpoint into Firebase build. Either resolves the split.</div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <span class="badge badge-ready">ready to map</span>
+      <div class="card-title">Xbox Elite controller</div>
+      <div class="card-body">Attached, recognized. Impulse triggers (L/R motors) are the haptic channel for uncertainty embodiment. Next: bind controller input to epistemic state signals in Unity.</div>
+    </div>
+    <div class="card">
+      <span class="badge badge-idea">evaluate</span>
+      <div class="card-title">AirPods Pro as haptic/audio channel</div>
+      <div class="card-body">Spatial audio + head tracking APIs. Likely closed on iOS. Android AudioEffect + head tracker APIs are more accessible. Audit before investing dev time. May park until Android phone arrives.</div>
+    </div>
+  </div>
+
+  <div class="section-label">Haptics pipeline — build order</div>
+  <div class="card">
+    <div class="status-row" style="margin-bottom: 8px;"><div class="dot dot-amber"></div><span class="status-text" style="font-size: 12px;">1. Resolve HTTPS split → unified build with camera + overlays</span></div>
+    <div class="status-row" style="margin-bottom: 8px;"><div class="dot dot-gray"></div><span class="status-text" style="font-size: 12px;">2. Map Xbox Elite triggers to uncertainty signal from sensor/AI layer</span></div>
+    <div class="status-row" style="margin-bottom: 8px;"><div class="dot dot-gray"></div><span class="status-text" style="font-size: 12px;">3. Prototype epistemic state → impulse trigger intensity mapping</span></div>
+    <div class="status-row"><div class="dot dot-gray"></div><span class="status-text" style="font-size: 12px;">4. Android phone → full test pipeline (tablet → phone parity)</span></div>
+  </div>
+
+  <div class="section-label">Epistolary device thread — Pilet + e-ink</div>
+  <div class="grid-2">
+    <div class="card">
+      <span class="badge badge-idea">concept</span>
+      <div class="card-title">Pilet 7 chassis mod</div>
+      <div class="card-body">MIPI DSI fast e-ink (Carta 1200/1300) replaces IPS panel. Open hardware — KiCad + STEP files released. Thumb keyboard + LTE module. Distraction-minimized correspondence machine.</div>
+    </div>
+    <div class="card">
+      <span class="badge badge-idea">research</span>
+      <div class="card-title">Display candidates</div>
+      <div class="card-body">Good Display GDEW075T7 · Waveshare 7.5" Carta. Mudita Kompakt as reference implementation for the register. Need MIPI DSI pinout compatibility check against Pi 5 CSI/DSI lane mapping.</div>
+    </div>
+  </div>
+
+  <div class="section-label">HedgehoggerV2 — pending MCP tunnel</div>
+  <div class="card">
+    <div class="card-body" style="margin-bottom: 10px;">MCP is up in Docker but LAN-only. Tasks below are staged for import when tunnel is active (ngrok / Cloudflare tunnel → connector).</div>
+    <div class="purchase-row"><span class="purchase-name">AR HUD: unify camera + sensor overlay</span><span class="purchase-status">working · high</span></div>
+    <div class="purchase-row"><span class="purchase-name">Xbox Elite: map triggers to uncertainty signal</span><span class="purchase-status">research · high</span></div>
+    <div class="purchase-row"><span class="purchase-name">Epistolary device: Pilet 7 + e-ink concept</span><span class="purchase-status">research · medium</span></div>
+    <div class="purchase-row"><span class="purchase-name">AirPods Pro API audit (Android vs iOS)</span><span class="purchase-status">research · low</span></div>
+    <div class="purchase-row"><span class="purchase-name">Android phone for AR test pipeline</span><span class="purchase-status">waiting · medium</span></div>
+    <button class="btn" onclick="sendPrompt('Help me set up a Cloudflare tunnel to expose HedgehoggerV2 MCP from my local Docker to Claude')">Set up MCP tunnel ↗</button>
+  </div>
+</div>

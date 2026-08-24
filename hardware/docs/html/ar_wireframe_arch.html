@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+<body style="margin:0;background:transparent">
+<svg width="100%" viewBox="0 0 680 320" xmlns="http://www.w3.org/2000/svg" style="font-family:sans-serif">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </marker>
+  </defs>
+
+  <!-- Pi Zero -->
+  <rect x="20" y="130" width="120" height="52" rx="8" fill="#FAC775" stroke="#BA7517" stroke-width="0.5"/>
+  <text x="80" y="152" text-anchor="middle" font-size="13" font-weight="500" fill="#633806">Pi Zero cam</text>
+  <text x="80" y="170" text-anchor="middle" font-size="11" fill="#854F0B">overhead /snap</text>
+
+  <!-- Inferno box -->
+  <rect x="220" y="90" width="150" height="148" rx="8" fill="#9FE1CB" stroke="#0F6E56" stroke-width="0.5"/>
+  <text x="295" y="114" text-anchor="middle" font-size="13" font-weight="500" fill="#04342C">Inferno FastAPI</text>
+
+  <rect x="236" y="124" width="118" height="30" rx="4" fill="#5DCAA5" stroke="#0F6E56" stroke-width="0.5"/>
+  <text x="295" y="143" text-anchor="middle" font-size="11" fill="#04342C">grab snap</text>
+
+  <rect x="236" y="162" width="118" height="30" rx="4" fill="#5DCAA5" stroke="#0F6E56" stroke-width="0.5"/>
+  <text x="295" y="181" text-anchor="middle" font-size="11" fill="#04342C">send → Gemini</text>
+
+  <rect x="236" y="200" width="118" height="30" rx="4" fill="#5DCAA5" stroke="#0F6E56" stroke-width="0.5"/>
+  <text x="295" y="219" text-anchor="middle" font-size="11" fill="#04342C">return component list</text>
+
+  <!-- Gemini -->
+  <rect x="220" y="22" width="150" height="52" rx="8" fill="#CECBF6" stroke="#534AB7" stroke-width="0.5"/>
+  <text x="295" y="44" text-anchor="middle" font-size="13" font-weight="500" fill="#26215C">Gemini</text>
+  <text x="295" y="62" text-anchor="middle" font-size="11" fill="#3C3489">components + bbox</text>
+
+  <!-- AR App -->
+  <rect x="490" y="90" width="160" height="148" rx="8" fill="#B5D4F4" stroke="#185FA5" stroke-width="0.5"/>
+  <text x="570" y="114" text-anchor="middle" font-size="13" font-weight="500" fill="#042C53">AR app (browser)</text>
+
+  <rect x="506" y="124" width="128" height="30" rx="4" fill="#85B7EB" stroke="#185FA5" stroke-width="0.5"/>
+  <text x="570" y="143" text-anchor="middle" font-size="11" fill="#042C53">SVG wireframes</text>
+
+  <rect x="506" y="162" width="128" height="30" rx="4" fill="#85B7EB" stroke="#185FA5" stroke-width="0.5"/>
+  <text x="570" y="181" text-anchor="middle" font-size="11" fill="#042C53">wiring overlays</text>
+
+  <rect x="506" y="200" width="128" height="30" rx="4" fill="#85B7EB" stroke="#185FA5" stroke-width="0.5"/>
+  <text x="570" y="219" text-anchor="middle" font-size="11" fill="#042C53">sensor annotations</text>
+
+  <!-- Arrows -->
+  <!-- Pi → Inferno -->
+  <line x1="140" y1="156" x2="218" y2="180" stroke="#666" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="178" y="158" text-anchor="middle" font-size="10" fill="#555">image bytes</text>
+
+  <!-- Inferno → Gemini (up) -->
+  <line x1="288" y1="90" x2="288" y2="76" stroke="#666" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Gemini → Inferno (down) -->
+  <line x1="304" y1="76" x2="304" y2="90" stroke="#666" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+  <!-- Inferno → AR app -->
+  <line x1="370" y1="164" x2="488" y2="164" stroke="#666" stroke-width="1.5" marker-end="url(#arrow)"/>
+  <text x="429" y="154" text-anchor="middle" font-size="10" fill="#555">JSON component list</text>
+
+  <!-- bottom note -->
+  <text x="340" y="300" text-anchor="middle" font-size="11" fill="#888">browser never renders raw image — only derived wireframes + overlays</text>
+</svg>
+</body>
+</html>

@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mission Outcome Report</title>
+    <style>
+        @media print {
+            @page {
+                margin: 0.75in;
+                size: letter;
+            }
+            body {
+                margin: 0;
+            }
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.4;
+            max-width: 8.5in;
+            margin: 0 auto;
+            padding: 0.5in;
+        }
+        
+        h1 {
+            text-align: center;
+            border-bottom: 3px solid #333;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .section {
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            padding: 15px;
+            background-color: #f9f9f9;
+        }
+        
+        .section-title {
+            font-weight: bold;
+            font-size: 14pt;
+            margin-bottom: 10px;
+            color: #2c3e50;
+            border-bottom: 2px solid #e74c3c;
+            padding-bottom: 5px;
+        }
+        
+        .field-row {
+            display: flex;
+            margin-bottom: 12px;
+            align-items: center;
+        }
+        
+        .field-label {
+            font-weight: bold;
+            min-width: 180px;
+            margin-right: 10px;
+        }
+        
+        .field-value {
+            flex: 1;
+            border-bottom: 1px solid #333;
+            min-height: 20px;
+            padding: 2px 5px;
+        }
+        
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        
+        .checkbox {
+            width: 16px;
+            height: 16px;
+            border: 2px solid #333;
+            display: inline-block;
+        }
+        
+        .rating-scale {
+            display: flex;
+            gap: 10px;
+            margin-top: 5px;
+        }
+        
+        .rating-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        
+        th, td {
+            border: 1px solid #333;
+            padding: 8px;
+            text-align: left;
+        }
+        
+        th {
+            background-color: #e74c3c;
+            color: white;
+            font-weight: bold;
+        }
+        
+        .notes-area {
+            border: 1px solid #333;
+            min-height: 60px;
+            padding: 8px;
+            background-color: white;
+        }
+        
+        .small-text {
+            font-size: 9pt;
+            color: #666;
+            font-style: italic;
+        }
+        
+        .header-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+        
+        .header-field {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+        
+        .highlight-box {
+            background-color: #fff3cd;
+            border: 2px solid #ffc107;
+            padding: 10px;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>MISSION OUTCOME REPORT</h1>
+    
+    <div class="header-row">
+        <div class="header-field">
+            <span class="field-label">Session ID:</span>
+            <span class="field-value" style="width: 150px;"></span>
+        </div>
+        <div class="header-field">
+            <span class="field-label">Mission Date:</span>
+            <span class="field-value" style="width: 100px;"></span>
+        </div>
+    </div>
+    
+    <div class="field-row">
+        <span class="field-label">Mission Duration:</span>
+        <span class="field-value" style="max-width: 80px;"></span>
+        <span style="margin-left: 5px;">hours</span>
+    </div>
+    
+    <div class="highlight-box">
+        <p style="margin: 0;"><strong>Note:</strong> This form links to your Assembly Session Log. Complete within 24-48 hours of mission completion while details are fresh.</p>
+    </div>
+    
+    <div class="section">
+        <div class="section-title">EQUIPMENT PERFORMANCE</div>
+        
+        <div style="margin-bottom: 15px;">
+            <span class="field-label">Rate the kit overall:</span>
+            <div class="rating-scale">
+                <div class="rating-item"><span class="checkbox"></span> Excellent</div>
+                <div class="rating-item"><span class="checkbox"></span> Good</div>
+                <div class="rating-item"><span class="checkbox"></span> Adequate</div>
+                <div class="rating-item"><span class="checkbox"></span> Poor</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="section">
+        <div class="section-title">ITEMS THAT EXCEEDED EXPECTATIONS</div>
+        <p class="small-text">Equipment that performed better than anticipated or was particularly useful</p>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 35%;">Item Description</th>
+                    <th style="width: 65%;">Why? What made it exceed expectations?</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td></td><td></td></tr>
+                <tr><td></td><td></td></tr>
+                <tr><td></td><td></td></tr>
+                <tr><td></td><td></td></tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="section">
+        <div class="section-title">ITEMS THAT WERE INADEQUATE</div>
+        <p class="small-text">Equipment that didn't perform as needed or caused problems</p>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 35%;">Item Description</th>
+                    <th style="width: 65%;">Why? What was the problem?</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td></td><td></td></tr>
+                <tr><td></td><td></td></tr>
+                <tr><td></td><td></td></tr>
+                <tr><td></td><td></td></tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="section">
+        <div class="section-title">ITEMS THAT WERE NOT NEEDED</div>
+        <p class="small-text">Equipment brought but never used - could potentially be removed from standard kit</p>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 40%;">Item Description</th>
+                    <th style="width: 60%;">Why wasn't it needed?</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td></td><td></td></tr>
+                <tr><td></td><td></td></tr>
+                <tr><td></td><td></td></tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="section">
+        <div class="section-title">ITEMS WISHED WE HAD BROUGHT</div>
+        <p class="small-text">Equipment that would have been useful but wasn't in the kit</p>
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 35%;">Item Description</th>
+                    <th style="width: 65%;">What problem would it have solved?</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr><td></td><td></td></tr>
+                <tr><td></td><td></td></tr>
+                <tr><td></td><td></td></tr>
+                <tr><td></td><td></td></tr>
+            </tbody>
+        </table>
+    </div>
+    
+    <div class="section">
+        <div class="section-title">UNEXPECTED DISCOVERIES</div>
+        
+        <div style="margin-bottom: 15px;">
+            <p class="field-label">Did you use items in unexpected combinations?</p>
+            <div class="notes-area"></div>
+        </div>
+        
+        <div style="margin-bottom: 15px;">
+            <p class="field-label">Did you discover new uses for familiar items?</p>
+            <div class="notes-area"></div>
+        </div>
+        
+        <div style="margin-bottom: 15px;">
+            <p class="field-label">Any improvised solutions that worked well?</p>
+            <div class="notes-area"></div>
+        </div>
+    </div>
+    
+    <div class="section">
+        <div class="section-title">ENVIRONMENTAL FACTORS</div>
+        
+        <p class="field-label">Did weather, terrain, or time of day significantly affect equipment needs or performance?</p>
+        <div class="notes-area" style="min-height: 80px;"></div>
+        
+        <p class="small-text" style="margin-top: 10px;">Examples: Cold weather made equipment brittle, darkness required more lighting than expected, rough terrain damaged carrying case, etc.</p>
+    </div>
+    
+    <div class="section">
+        <div class="section-title">LESSONS LEARNED</div>
+        
+        <p class="field-label">For future similar missions, what would you do differently?</p>
+        <div class="notes-area" style="min-height: 100px;"></div>
+    </div>
+    
+    <div class="section">
+        <div class="section-title">KIT MODIFICATION RECOMMENDATIONS</div>
+        
+        <p class="field-label">Would you change the standard kit? How?</p>
+        <div class="notes-area" style="min-height: 80px;"></div>
+        
+        <div style="margin-top: 15px;">
+            <span class="field-label">Recommended additions:</span>
+            <div class="field-value"></div>
+        </div>
+        
+        <div style="margin-top: 10px;">
+            <span class="field-label">Recommended removals:</span>
+            <div class="field-value"></div>
+        </div>
+        
+        <div style="margin-top: 10px;">
+            <span class="field-label">Recommended substitutions:</span>
+            <div class="field-value"></div>
+        </div>
+    </div>
+    
+    <div style="margin-top: 30px; border-top: 2px solid #333; padding-top: 15px;">
+        <div class="field-row">
+            <span class="field-label">Agent Signature:</span>
+            <span class="field-value" style="max-width: 250px;"></span>
+            <span class="field-label" style="margin-left: 30px;">Date:</span>
+            <span class="field-value" style="max-width: 120px;"></span>
+        </div>
+    </div>
+    
+    <div style="margin-top: 30px; text-align: center; font-size: 9pt; color: #666;">
+        <p>Adaptive Asset Assembly System (AAAS) - Mission Outcome Form v1.0</p>
+    </div>
+</body>
+</html>

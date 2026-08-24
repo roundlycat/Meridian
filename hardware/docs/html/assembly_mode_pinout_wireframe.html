@@ -1,0 +1,522 @@
+
+<style>
+  :root {
+    --ar-bg: #0d1117;
+    --ar-card: rgba(255,255,255,0.06);
+    --ar-border: rgba(255,255,255,0.12);
+    --ar-cyan: #00e5cc;
+    --ar-cyan-dim: rgba(0,229,204,0.15);
+    --ar-text: rgba(255,255,255,0.9);
+    --ar-muted: rgba(255,255,255,0.45);
+    --ar-red: #ff6b6b;
+    --ar-black-wire: #aaaaaa;
+    --ar-yellow: #ffd166;
+    --ar-blue: #74b9ff;
+    --font: 'SF Mono', 'Fira Code', monospace;
+  }
+
+  .ar-shell {
+    background: var(--ar-bg);
+    border-radius: 16px;
+    padding: 0;
+    overflow: hidden;
+    font-family: var(--font);
+    color: var(--ar-text);
+    min-height: 560px;
+  }
+
+  .ar-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--ar-border);
+  }
+
+  .ar-topbar-title {
+    font-size: 11px;
+    color: var(--ar-cyan);
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+  }
+
+  .ar-live-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--ar-cyan);
+    display: inline-block;
+    margin-right: 6px;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.3; }
+  }
+
+  .mode-toggle {
+    display: flex;
+    gap: 4px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 8px;
+    padding: 3px;
+  }
+
+  .mode-btn {
+    font-family: var(--font);
+    font-size: 10px;
+    letter-spacing: 0.06em;
+    padding: 4px 10px;
+    border-radius: 5px;
+    border: none;
+    cursor: pointer;
+    color: var(--ar-muted);
+    background: transparent;
+    transition: all 0.2s;
+  }
+
+  .mode-btn.active {
+    background: var(--ar-cyan);
+    color: #000;
+  }
+
+  .ar-body {
+    padding: 14px 16px;
+  }
+
+  .step-header {
+    font-size: 9px;
+    letter-spacing: 0.14em;
+    color: var(--ar-cyan);
+    margin-bottom: 10px;
+    text-transform: uppercase;
+  }
+
+  .step-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+
+  .step-dot {
+    width: 28px; height: 28px;
+    border-radius: 50%;
+    border: 1.5px solid var(--ar-border);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px;
+    color: var(--ar-muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+
+  .step-dot.active {
+    border-color: var(--ar-cyan);
+    color: var(--ar-cyan);
+    background: var(--ar-cyan-dim);
+  }
+
+  .step-dot.done {
+    border-color: var(--ar-cyan);
+    background: var(--ar-cyan);
+    color: #000;
+  }
+
+  .wire-canvas-wrap {
+    position: relative;
+    width: 100%;
+  }
+
+  .cards-row {
+    display: grid;
+    grid-template-columns: 1fr 80px 1fr;
+    gap: 0;
+    align-items: start;
+  }
+
+  .component-card {
+    background: var(--ar-card);
+    border: 1px solid var(--ar-border);
+    border-radius: 10px;
+    padding: 10px;
+  }
+
+  .card-label {
+    font-size: 9px;
+    letter-spacing: 0.1em;
+    color: var(--ar-cyan);
+    margin-bottom: 6px;
+    text-transform: uppercase;
+  }
+
+  .card-name {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ar-text);
+    margin-bottom: 10px;
+    font-family: var(--font);
+  }
+
+  .pin-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 4px 0;
+    border-top: 1px solid rgba(255,255,255,0.05);
+    cursor: pointer;
+    transition: background 0.15s;
+    border-radius: 4px;
+    padding: 5px 4px;
+  }
+
+  .pin-row:hover {
+    background: rgba(255,255,255,0.04);
+  }
+
+  .pin-row.highlighted {
+    background: rgba(0,229,204,0.08);
+  }
+
+  .pin-label {
+    font-size: 11px;
+    color: var(--ar-muted);
+    font-family: var(--font);
+  }
+
+  .pin-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .pin-name {
+    font-size: 11px;
+    font-weight: 500;
+    font-family: var(--font);
+  }
+
+  .wire-column {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding-top: 52px;
+  }
+
+  svg.wires {
+    width: 80px;
+    overflow: visible;
+  }
+
+  .wire-path {
+    fill: none;
+    stroke-width: 2;
+    stroke-linecap: round;
+    opacity: 0.5;
+    transition: opacity 0.2s, stroke-width 0.2s;
+  }
+
+  .wire-path.active {
+    opacity: 1;
+    stroke-width: 2.5;
+    filter: drop-shadow(0 0 3px currentColor);
+  }
+
+  .wire-path.animated {
+    stroke-dasharray: 6 4;
+    animation: dash 1s linear infinite;
+  }
+
+  @keyframes dash {
+    to { stroke-dashoffset: -10; }
+  }
+
+  .wire-label {
+    font-family: var(--font);
+    font-size: 9px;
+    fill: var(--ar-muted);
+    text-anchor: middle;
+  }
+
+  .step-instruction {
+    background: var(--ar-card);
+    border: 1px solid var(--ar-border);
+    border-radius: 8px;
+    padding: 10px 14px;
+    margin-top: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .step-wire-swatch {
+    width: 24px; height: 4px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .step-text {
+    font-size: 11px;
+    color: var(--ar-text);
+    line-height: 1.5;
+    font-family: var(--font);
+  }
+
+  .step-text span {
+    color: var(--ar-cyan);
+  }
+
+  .step-nav {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+  }
+
+  .step-nav-btn {
+    font-family: var(--font);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    padding: 6px 14px;
+    border-radius: 6px;
+    border: 1px solid var(--ar-border);
+    cursor: pointer;
+    color: var(--ar-text);
+    background: transparent;
+    transition: all 0.2s;
+  }
+
+  .step-nav-btn:hover {
+    border-color: var(--ar-cyan);
+    color: var(--ar-cyan);
+  }
+
+  .step-nav-btn.primary {
+    background: var(--ar-cyan);
+    border-color: var(--ar-cyan);
+    color: #000;
+  }
+
+  .step-nav-btn.primary:hover {
+    opacity: 0.85;
+    color: #000;
+  }
+
+  .confidence-badge {
+    font-size: 9px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    border: 1px solid var(--ar-cyan-dim);
+    color: var(--ar-cyan);
+    letter-spacing: 0.06em;
+  }
+</style>
+
+<div class="ar-shell">
+  <div class="ar-topbar">
+    <div>
+      <span class="ar-live-dot"></span>
+      <span class="ar-topbar-title">AR Guidance — Assembly Mode</span>
+    </div>
+    <div style="display:flex;gap:10px;align-items:center;">
+      <span class="confidence-badge">98% MATCH</span>
+      <div class="mode-toggle">
+        <button class="mode-btn" onclick="setMode('discovery')">Discovery</button>
+        <button class="mode-btn active" onclick="setMode('assembly')">Assembly</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="ar-body">
+    <div class="step-header">wiring guide — bme280 → d1 mini</div>
+
+    <div class="step-bar">
+      <div class="step-dot done" onclick="goStep(0)">✓</div>
+      <div class="step-dot active" onclick="goStep(1)" id="dot1">2</div>
+      <div class="step-dot" onclick="goStep(2)" id="dot2">3</div>
+      <div class="step-dot" onclick="goStep(3)" id="dot3">4</div>
+      <div class="step-dot" onclick="goStep(4)" id="dot4">5</div>
+      <div style="flex:1;display:flex;align-items:center;padding-left:4px;">
+        <div style="height:1px;background:var(--ar-border);flex:1;"></div>
+        <span style="font-size:9px;color:var(--ar-muted);padding-left:8px;">step <span id="step-num">2</span> of 5</span>
+      </div>
+    </div>
+
+    <div class="cards-row">
+      <div class="component-card" id="card-mcu">
+        <div class="card-label">microcontroller</div>
+        <div class="card-name">D1 Mini</div>
+        <div class="pin-row" id="mcu-5v">
+          <span class="pin-name" style="color:#ff6b6b">5V</span>
+          <span class="pin-label">power in</span>
+          <div class="pin-dot" style="background:#ff6b6b"></div>
+        </div>
+        <div class="pin-row highlighted" id="mcu-3v3">
+          <span class="pin-name" style="color:#ff6b6b">3.3V</span>
+          <span class="pin-label">3.3v out</span>
+          <div class="pin-dot" style="background:#ff6b6b"></div>
+        </div>
+        <div class="pin-row highlighted" id="mcu-gnd">
+          <span class="pin-name" style="color:#aaa">GND</span>
+          <span class="pin-label">ground</span>
+          <div class="pin-dot" style="background:#aaa"></div>
+        </div>
+        <div class="pin-row" id="mcu-scl">
+          <span class="pin-name" style="color:#ffd166">D1/SCL</span>
+          <span class="pin-label">i2c clock</span>
+          <div class="pin-dot" style="background:#ffd166"></div>
+        </div>
+        <div class="pin-row" id="mcu-sda">
+          <span class="pin-name" style="color:#74b9ff">D2/SDA</span>
+          <span class="pin-label">i2c data</span>
+          <div class="pin-dot" style="background:#74b9ff"></div>
+        </div>
+      </div>
+
+      <div class="wire-column">
+        <svg class="wires" viewBox="0 0 80 120" height="120">
+          <path id="w-3v3" class="wire-path active animated" stroke="#ff6b6b"
+            d="M 0,18 C 40,18 40,18 80,18"/>
+          <path id="w-gnd" class="wire-path active animated" stroke="#aaaaaa"
+            d="M 0,40 C 40,40 40,40 80,40"/>
+          <path id="w-scl" class="wire-path" stroke="#ffd166"
+            d="M 0,62 C 40,62 40,62 80,62"/>
+          <path id="w-sda" class="wire-path" stroke="#74b9ff"
+            d="M 0,84 C 40,84 40,84 80,84"/>
+          <text class="wire-label" x="40" y="14" fill="#ff6b6b" style="opacity:0.6;font-size:8px">pwr</text>
+          <text class="wire-label" x="40" y="36" fill="#aaaaaa" style="opacity:0.6;font-size:8px">gnd</text>
+          <text class="wire-label" x="40" y="58" fill="#ffd166" style="opacity:0.4;font-size:8px">scl</text>
+          <text class="wire-label" x="40" y="80" fill="#74b9ff" style="opacity:0.4;font-size:8px">sda</text>
+        </svg>
+      </div>
+
+      <div class="component-card" id="card-sensor">
+        <div class="card-label">sensor</div>
+        <div class="card-name">BME280</div>
+        <div class="pin-row">
+          <div class="pin-dot" style="background:#aaa"></div>
+          <span class="pin-label">addr sel</span>
+          <span class="pin-name" style="color:#aaa">SDO</span>
+        </div>
+        <div class="pin-row highlighted" id="sen-vcc">
+          <div class="pin-dot" style="background:#ff6b6b"></div>
+          <span class="pin-label">3.3v in</span>
+          <span class="pin-name" style="color:#ff6b6b">VCC</span>
+        </div>
+        <div class="pin-row highlighted" id="sen-gnd">
+          <div class="pin-dot" style="background:#aaa"></div>
+          <span class="pin-label">ground</span>
+          <span class="pin-name" style="color:#aaa">GND</span>
+        </div>
+        <div class="pin-row" id="sen-scl">
+          <div class="pin-dot" style="background:#ffd166"></div>
+          <span class="pin-label">i2c clock</span>
+          <span class="pin-name" style="color:#ffd166">SCK</span>
+        </div>
+        <div class="pin-row" id="sen-sda">
+          <div class="pin-dot" style="background:#74b9ff"></div>
+          <span class="pin-label">i2c data</span>
+          <span class="pin-name" style="color:#74b9ff">SDI</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="step-instruction" id="step-instr">
+      <div class="step-wire-swatch" id="step-swatch" style="background:#ff6b6b"></div>
+      <div class="step-text" id="step-text">
+        Connect <span>red wire</span>: D1 Mini <span>3.3V</span> → BME280 <span>VCC</span>. BME280 operates at 3.3V — do not connect to 5V rail.
+      </div>
+    </div>
+
+    <div class="step-nav">
+      <button class="step-nav-btn" onclick="prevStep()">← back</button>
+      <button class="step-nav-btn primary" onclick="nextStep()">confirm & next →</button>
+      <button class="step-nav-btn" style="margin-left:auto" onclick="sendPrompt('Show me the BME280 firmware config for this wiring')">flash config ↗</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const steps = [
+  {
+    label: "Parts identified",
+    swatch: "#00e5cc",
+    text: "Parts identified. D1 Mini (ESP8266) and BME280 sensor detected. Starting wiring guide.",
+    wires: [],
+    pins: []
+  },
+  {
+    label: "Power",
+    swatch: "#ff6b6b",
+    text: "Connect <span>red wire</span>: D1 Mini <span>3.3V</span> → BME280 <span>VCC</span>. BME280 operates at 3.3V — do not connect to 5V rail.",
+    wires: ["w-3v3"],
+    pins: ["mcu-3v3","sen-vcc"]
+  },
+  {
+    label: "Ground",
+    swatch: "#aaaaaa",
+    text: "Connect <span>black wire</span>: D1 Mini <span>GND</span> → BME280 <span>GND</span>. Any GND pin on the D1 Mini works.",
+    wires: ["w-gnd"],
+    pins: ["mcu-gnd","sen-gnd"]
+  },
+  {
+    label: "I2C Clock",
+    swatch: "#ffd166",
+    text: "Connect <span>yellow wire</span>: D1 Mini <span>D1/SCL</span> → BME280 <span>SCK</span>. D1 is GPIO5, default SCL in your Wire.begin() config.",
+    wires: ["w-scl"],
+    pins: ["mcu-scl","sen-scl"]
+  },
+  {
+    label: "I2C Data",
+    swatch: "#74b9ff",
+    text: "Connect <span>blue wire</span>: D1 Mini <span>D2/SDA</span> → BME280 <span>SDI</span>. D2 is GPIO4, default SDA. I2C address will be 0x76 with SDO pulled low.",
+    wires: ["w-sda"],
+    pins: ["mcu-sda","sen-sda"]
+  }
+];
+
+let currentStep = 1;
+
+function applyStep(s) {
+  document.querySelectorAll('.wire-path').forEach(w => {
+    w.classList.remove('active','animated');
+    w.style.opacity = '0.18';
+  });
+  document.querySelectorAll('.pin-row').forEach(p => p.classList.remove('highlighted'));
+
+  steps[s].wires.forEach(id => {
+    const el = document.getElementById(id);
+    if(el){ el.classList.add('active','animated'); el.style.opacity='1'; }
+  });
+  steps[s].pins.forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.classList.add('highlighted');
+  });
+
+  document.getElementById('step-text').innerHTML = steps[s].text;
+  document.getElementById('step-swatch').style.background = steps[s].swatch;
+  document.getElementById('step-num').textContent = s + 1;
+
+  for(let i=1;i<=4;i++){
+    const dot = document.getElementById('dot'+i);
+    if(!dot) continue;
+    dot.classList.remove('active','done');
+    if(i < s) dot.classList.add('done'), dot.textContent='✓';
+    else if(i === s) dot.classList.add('active'), dot.textContent=i+1;
+    else dot.textContent=i+1;
+  }
+}
+
+function nextStep(){
+  if(currentStep < steps.length-1){ currentStep++; applyStep(currentStep); }
+  else { sendPrompt('Assembly complete — show me the firmware flash config for D1 Mini + BME280 on I2C 0x76'); }
+}
+function prevStep(){ if(currentStep>1){ currentStep--; applyStep(currentStep); } }
+function goStep(s){ currentStep=s; applyStep(s); }
+function setMode(m){
+  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
+  event.target.classList.add('active');
+  if(m==='discovery') sendPrompt('Switch AR guidance to discovery mode');
+}
+
+applyStep(1);
+</script>

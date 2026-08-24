@@ -1,0 +1,103 @@
+<!--
+View Poem Template
+==================
+This template shows a single poem in full detail.
+Useful for previewing how a poem will look on the display.
+-->
+{% extends "base.html" %}
+
+{% block title %}{{ poem['title'] }}{% endblock %}
+
+{% block content %}
+    <!-- Back button -->
+    <div style="margin-bottom: 20px;">
+        <a href="{{ url_for('index') }}" class="button" style="background-color: #95a5a6;">
+            ← Back to Collection
+        </a>
+    </div>
+    
+    <!-- Poem display card -->
+    <div class="poem-card" style="border-left: 6px solid #3498db;">
+        <h2 style="margin-top: 0;">{{ poem['title'] }}</h2>
+        <div class="author" style="font-size: 1.1em; margin-bottom: 20px;">
+            by {{ poem['author'] }}
+        </div>
+        
+        <!--
+        The poem text is displayed with pre-wrap to preserve formatting.
+        This is important for poetry where line breaks matter!
+        
+        white-space: pre-wrap means:
+        - Preserve spaces and line breaks from the original text
+        - But wrap long lines if needed (unlike "pre")
+        -->
+        <div class="poem-text" style="font-size: 1.1em; padding: 20px;">
+{{ poem['text'] }}
+        </div>
+        
+        <!-- Metadata -->
+        <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #ddd;">
+            <div class="date">Added: {{ poem['added_date'] }}</div>
+            <div style="color: #7f8c8d; margin-top: 5px;">
+                Poem ID: {{ poem['id'] }}
+            </div>
+        </div>
+    </div>
+    
+    <!-- Info box about the display -->
+    <div class="info-box" style="margin-top: 30px;">
+        <strong>Display Preview:</strong><br>
+        This is approximately how the poem will appear on your e-ink display.
+        The actual display will scroll if the poem is too long to fit on screen.
+    </div>
+    
+    <!-- Action buttons -->
+    <div style="margin-top: 30px;">
+        <!-- Test this specific poem via API -->
+        <a href="{{ url_for('api_get_poem', poem_id=poem['id']) }}" 
+           class="button" 
+           target="_blank"
+           style="background-color: #27ae60;">
+            View API Response (JSON)
+        </a>
+        
+        <!--
+        Delete button with confirmation
+        Same pattern as in index.html
+        -->
+        <form action="{{ url_for('delete_poem', poem_id=poem['id']) }}" 
+              method="POST" 
+              style="display: inline;"
+              onsubmit="return confirm('Are you sure you want to delete \'{{ poem['title'] }}\'?');">
+            <button type="submit" class="delete">Delete This Poem</button>
+        </form>
+    </div>
+    
+    <!-- Technical information -->
+    <div style="margin-top: 40px; padding: 20px; background-color: #f9f9f9; border-radius: 4px;">
+        <h3 style="margin-top: 0; color: #34495e;">Technical Details</h3>
+        <table style="width: 100%;">
+            <tr>
+                <td style="padding: 8px; font-weight: bold;">Character Count:</td>
+                <td style="padding: 8px;">{{ poem['text']|length }} characters</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px; font-weight: bold;">Line Count:</td>
+                <td style="padding: 8px;">{{ poem['text'].split('\n')|length }} lines</td>
+            </tr>
+            <tr>
+                <td style="padding: 8px; font-weight: bold;">API Endpoint:</td>
+                <td style="padding: 8px;">
+                    <code>/api/poem/{{ poem['id'] }}</code>
+                </td>
+            </tr>
+        </table>
+        <p style="margin-top: 15px; color: #7f8c8d; font-size: 0.9em;">
+            Your display script can fetch this specific poem using:
+            <br>
+            <code style="display: block; margin-top: 5px; padding: 10px; background-color: #fff;">
+                curl http://localhost:5000/api/poem/{{ poem['id'] }}
+            </code>
+        </p>
+    </div>
+{% endblock %}

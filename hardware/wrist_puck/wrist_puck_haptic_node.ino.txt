@@ -1,0 +1,525 @@
+/*
+ * =============================================================
+ *  WRIST-PUCK DUAL-CHANNEL HAPTIC NODE — ESP32-C3 Firmware
+ * =============================================================
+ *  Hardware : Seeed XIAO ESP32-C3, DRV2605L, SG51R, 10mm LRA
+ *  Author   : Copilot / Sean (Whitehorse, YT)
+ *  Date     : 2026-05
+ *  License  : MIT
+ *
+ *  Features:
+ *    - Wi-Fi STA client with auto-reconnect
+ *    - UDP listener (port 9000) for JSON haptic motifs
+ *    - I2C DRV2605L driver for LRA texture channel
+ *    - PWM servo control for SG51R weight-shift channel
+ *    - JSON motif schema with sequenced dual-channel effects
+ *    - Hardware watchdog (8 s timeout)
+ *    - On-boot calibration routine (LRA auto-cal + servo sweep)
+ *    - Battery voltage monitor via ADC
+ *    - Status LED feedback
+ * =============================================================
+ */
+
+#include <WiFi.h>
+#include <WiFiUdp.h>
+#include <Wire.h>
+#include <ESP32Servo.h>
+#include <ArduinoJson.h>
+#include <esp_task_wdt.h>
+
+// ─────────────────────── PIN MAP (XIAO ESP32-C3) ────────────────────
+#define PIN_SDA         6    // GPIO6  → I2C SDA  (DRV2605L)
+#define PIN_SCL         7    // GPIO7  → I2C SCL  (DRV2605L)
+#define PIN_SERVO       5    // GPIO5  → PWM out  (SG51R signal)
+#define PIN_VBAT_ADC    2    // GPIO2  → ADC battery divider
+#define PIN_LED         10   // Built-in LED (active LOW on XIAO)
+
+// ─────────────────────── DRV2605L I2C REGISTERS ─────────────────────
+#define DRV2605_ADDR       0x5A
+#define DRV_REG_STATUS     0x00
+#define DRV_REG_MODE       0x01
+#define DRV_REG_RTP        0x02
+#define DRV_REG_LIBRARY    0x03
+#define DRV_REG_WAVESEQ1   0x04
+#define DRV_REG_GO         0x0C
+#define DRV_REG_OVERDRIVE   0x0D
+#define DRV_REG_SUSTAIN_POS 0x0E
+#define DRV_REG_SUSTAIN_NEG 0x0F
+#define DRV_REG_BRAKE      0x10
+#define DRV_REG_A2H_CTRL   0x11
+#define DRV_REG_A2H_MIN    0x12
+#define DRV_REG_A2H_MAX    0x13
+#define DRV_REG_A2H_PEAK   0x14
+#define DRV_REG_RATED_V    0x16
+#define DRV_REG_OD_CLAMP   0x17
+#define DRV_REG_A_CAL_COMP 0x18
+#define DRV_REG_A_CAL_BEMF 0x19
+#define DRV_REG_FEEDBACK   0x1A
+#define DRV_REG_CTRL1      0x1B
+#define DRV_REG_CTRL2      0x1C
+#define DRV_REG_CTRL3      0x1D
+#define DRV_REG_CTRL4      0x1E
+#define DRV_REG_VBAT       0x21
+#define DRV_REG_LRA_PERIOD 0x22
+
+// ─────────────────────── NETWORK CONFIG ─────────────────────────────
+const char* WIFI_SSID     = "YOUR_SSID";       // ← edit
+const char* WIFI_PASS     = "YOUR_PASSWORD";    // ← edit
+const uint16_t UDP_PORT   = 9000;
+
+// ─────────────────────── SERVO LIMITS ───────────────────────────────
+#define SERVO_MIN_US     750   // μs pulse for full-left
+#define SERVO_MAX_US    2250   // μs pulse for full-right
+#define SERVO_CENTER_US 1500
+#define SERVO_TRAVEL_MS   80   // safety ramp step (ms)
+
+// ─────────────────────── WATCHDOG ───────────────────────────────────
+#define WDT_TIMEOUT_S      8
+#define SAFETY_IDLE_MS  5000   // auto-center servo after idle
+
+// ─────────────────────── GLOBALS ────────────────────────────────────
+WiFiUDP udp;
+Servo   sg51r;
+
+bool    drvReady       = false;
+uint32_t lastMotifMs   = 0;
+int     currentServoUs = SERVO_CENTER_US;
+float   batteryV       = 0.0;
+
+// ──────────────────────── I2C HELPERS ───────────────────────────────
+void drvWrite(uint8_t reg, uint8_t val) {
+  Wire.beginTransmission(DRV2605_ADDR);
+  Wire.write(reg);
+  Wire.write(val);
+  Wire.endTransmission();
+}
+
+uint8_t drvRead(uint8_t reg) {
+  Wire.beginTransmission(DRV2605_ADDR);
+  Wire.write(reg);
+  Wire.endTransmission(false);
+  Wire.requestFrom((uint8_t)DRV2605_ADDR, (uint8_t)1);
+  return Wire.available() ? Wire.read() : 0;
+}
+
+// ──────────────────────── DRV2605L INIT (LRA MODE) ──────────────────
+bool drvInit() {
+  // Read status to verify chip presence
+  uint8_t st = drvRead(DRV_REG_STATUS);
+  if (st == 0xFF) {
+    Serial.println("[DRV] Not found on I2C bus!");
+    return false;
+  }
+  Serial.printf("[DRV] Status register: 0x%02X\n", st);
+
+  // Enter standby then configure
+  drvWrite(DRV_REG_MODE, 0x00);       // out of standby
+  delay(10);
+
+  // Set LRA rated voltage ~2.0 Vrms → register value
+  // Rated Voltage = RatedVoltage[7:0] × 21.33 mV
+  // For 2.0V: 2000/21.33 ≈ 94 → 0x5E
+  drvWrite(DRV_REG_RATED_V, 0x5E);
+
+  // Overdrive clamp ~2.5V peak
+  drvWrite(DRV_REG_OD_CLAMP, 0x75);
+
+  // Feedback control register: LRA mode, brake factor 4×, loop gain medium
+  //  Bit 7: ERM/LRA = 1 (LRA)
+  //  Bits 6-4: FB_BRAKE_FACTOR = 011 (4×)
+  //  Bits 3-2: LOOP_GAIN = 01 (medium)
+  //  Bits 1-0: BEMF_GAIN = 01
+  drvWrite(DRV_REG_FEEDBACK, 0xB6);
+
+  // Control1: startup boost enabled, drive time for LRA
+  drvWrite(DRV_REG_CTRL1, 0x93);
+
+  // Control2: sample time 300μs, blanking 25μs, IDISS 25μs
+  drvWrite(DRV_REG_CTRL2, 0xF5);
+
+  // Control3: LRA open-loop = 0 (closed), data format signed,
+  //           supply compensation disabled, ERM open loop = 0
+  //           N_PWM_ANALOG = 0 (PWM), LRA_DRIVE_MODE = 0
+  drvWrite(DRV_REG_CTRL3, 0xA0);
+
+  // Use internal library 6 (LRA library)
+  drvWrite(DRV_REG_LIBRARY, 0x06);
+
+  Serial.println("[DRV] Initialized for LRA mode");
+  return true;
+}
+
+// ──────────────────────── DRV AUTO-CALIBRATION ──────────────────────
+bool drvAutoCalibrate() {
+  Serial.println("[DRV] Starting auto-calibration...");
+
+  // Set mode to auto-calibration (mode 0x07)
+  drvWrite(DRV_REG_MODE, 0x07);
+  delay(10);
+
+  // Trigger GO
+  drvWrite(DRV_REG_GO, 0x01);
+
+  // Wait for calibration to complete (GO bit clears)
+  uint32_t t0 = millis();
+  while (drvRead(DRV_REG_GO) & 0x01) {
+    if (millis() - t0 > 3000) {
+      Serial.println("[DRV] Auto-cal timeout!");
+      return false;
+    }
+    delay(50);
+  }
+
+  // Check DIAG_RESULT in status register (bit 3)
+  uint8_t st = drvRead(DRV_REG_STATUS);
+  if (st & 0x08) {
+    Serial.println("[DRV] Auto-cal FAILED (DIAG_RESULT=1)");
+    return false;
+  }
+
+  // Read back calibration results
+  uint8_t comp = drvRead(DRV_REG_A_CAL_COMP);
+  uint8_t bemf = drvRead(DRV_REG_A_CAL_BEMF);
+  uint8_t fb   = drvRead(DRV_REG_FEEDBACK);
+  Serial.printf("[DRV] Auto-cal OK  COMP=0x%02X  BEMF=0x%02X  FB=0x%02X\n",
+                comp, bemf, fb);
+
+  // Return to internal trigger mode
+  drvWrite(DRV_REG_MODE, 0x00);
+  delay(10);
+
+  return true;
+}
+
+// ──────────────────────── DRV PLAY EFFECT ───────────────────────────
+void drvPlayEffect(uint8_t effect) {
+  if (!drvReady) return;
+  drvWrite(DRV_REG_MODE, 0x00);          // internal trigger mode
+  drvWrite(DRV_REG_WAVESEQ1, effect);    // load effect into slot 1
+  drvWrite(DRV_REG_WAVESEQ1 + 1, 0x00); // end of sequence
+  drvWrite(DRV_REG_GO, 0x01);            // fire
+}
+
+// ──────────────────────── DRV RTP (REAL-TIME PLAYBACK) ──────────────
+void drvSetRTP(uint8_t amplitude) {
+  if (!drvReady) return;
+  drvWrite(DRV_REG_MODE, 0x05);   // RTP mode
+  drvWrite(DRV_REG_RTP, amplitude);
+}
+
+void drvStop() {
+  if (!drvReady) return;
+  drvWrite(DRV_REG_GO, 0x00);
+  drvWrite(DRV_REG_MODE, 0x00);
+}
+
+// ──────────────────────── SERVO HELPERS ─────────────────────────────
+void servoMoveTo(int targetUs) {
+  targetUs = constrain(targetUs, SERVO_MIN_US, SERVO_MAX_US);
+  // Ramp to target for smooth, safe motion
+  while (currentServoUs != targetUs) {
+    if (currentServoUs < targetUs)
+      currentServoUs = min(currentServoUs + 20, targetUs);
+    else
+      currentServoUs = max(currentServoUs - 20, targetUs);
+    sg51r.writeMicroseconds(currentServoUs);
+    delay(5);
+  }
+}
+
+void servoCenter() {
+  servoMoveTo(SERVO_CENTER_US);
+}
+
+void servoSweepTest() {
+  Serial.println("[SERVO] Sweep test: center → left → right → center");
+  servoCenter();
+  delay(300);
+  servoMoveTo(SERVO_MIN_US);
+  delay(300);
+  servoMoveTo(SERVO_MAX_US);
+  delay(300);
+  servoCenter();
+  Serial.println("[SERVO] Sweep test complete");
+}
+
+// ──────────────────────── BATTERY MONITOR ───────────────────────────
+float readBatteryVoltage() {
+  // Assumes 100k/100k voltage divider on PIN_VBAT_ADC
+  // ADC reference ~3.3V, 12-bit (0-4095)
+  int raw = analogRead(PIN_VBAT_ADC);
+  float v = (raw / 4095.0) * 3.3 * 2.0;  // ×2 for divider
+  return v;
+}
+
+// ──────────────────────── WiFi CONNECT ──────────────────────────────
+void wifiConnect() {
+  Serial.printf("[WiFi] Connecting to %s ", WIFI_SSID);
+  WiFi.mode(WIFI_STA);
+  WiFi.begin(WIFI_SSID, WIFI_PASS);
+
+  uint32_t t0 = millis();
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(250);
+    Serial.print('.');
+    if (millis() - t0 > 15000) {
+      Serial.println("\n[WiFi] Connection timeout — will retry later");
+      return;
+    }
+  }
+  Serial.printf("\n[WiFi] Connected  IP=%s  RSSI=%d dBm\n",
+                WiFi.localIP().toString().c_str(), WiFi.RSSI());
+}
+
+// ──────────────────────── STATUS LED ────────────────────────────────
+void ledBlink(int count, int onMs, int offMs) {
+  for (int i = 0; i < count; i++) {
+    digitalWrite(PIN_LED, LOW);   // active-low
+    delay(onMs);
+    digitalWrite(PIN_LED, HIGH);
+    delay(offMs);
+  }
+}
+
+// ──────────────────────── JSON MOTIF PARSER ─────────────────────────
+/*
+ * Expected JSON motif schema (UDP payload):
+ *
+ *  {
+ *    "id": "bump_texture",
+ *    "repeat": 1,
+ *    "steps": [
+ *      {
+ *        "ch": "lra",
+ *        "type": "effect",
+ *        "effect": 47,
+ *        "dur_ms": 200
+ *      },
+ *      {
+ *        "ch": "servo",
+ *        "type": "pos",
+ *        "pos_us": 1000,
+ *        "dur_ms": 300
+ *      },
+ *      {
+ *        "ch": "lra",
+ *        "type": "rtp",
+ *        "amplitude": 180,
+ *        "dur_ms": 150
+ *      },
+ *      {
+ *        "ch": "servo",
+ *        "type": "center",
+ *        "dur_ms": 0
+ *      }
+ *    ]
+ *  }
+ *
+ *  "ch"    : "lra" or "servo"
+ *  "type"  : "effect" (library #), "rtp" (real-time), "stop",
+ *            "pos" (servo μs), "center", "sweep"
+ *  "effect": 1-123 (DRV2605L waveform library index)
+ *  "amplitude": 0-255 for RTP mode
+ *  "pos_us": 750-2250 servo target
+ *  "dur_ms": dwell time after action before next step
+ */
+
+void processMotif(const char* json, size_t len) {
+  // Allow up to 1 KB JSON document
+  StaticJsonDocument<1024> doc;
+  DeserializationError err = deserializeJson(doc, json, len);
+  if (err) {
+    Serial.printf("[MOTIF] Parse error: %s\n", err.c_str());
+    return;
+  }
+
+  const char* motifId = doc["id"] | "unnamed";
+  int repeatCount = doc["repeat"] | 1;
+  repeatCount = constrain(repeatCount, 1, 10);
+
+  JsonArray steps = doc["steps"].as<JsonArray>();
+  if (steps.isNull() || steps.size() == 0) {
+    Serial.println("[MOTIF] No steps array");
+    return;
+  }
+
+  Serial.printf("[MOTIF] Playing '%s' ×%d  (%d steps)\n",
+                motifId, repeatCount, steps.size());
+
+  for (int r = 0; r < repeatCount; r++) {
+    for (JsonObject step : steps) {
+      esp_task_wdt_reset();  // keep watchdog happy during long sequences
+
+      const char* ch   = step["ch"]   | "lra";
+      const char* type = step["type"] | "stop";
+      int durMs        = step["dur_ms"] | 0;
+      durMs = constrain(durMs, 0, 5000);
+
+      if (strcmp(ch, "lra") == 0) {
+        // ── LRA channel ──
+        if (strcmp(type, "effect") == 0) {
+          uint8_t fx = step["effect"] | 1;
+          fx = constrain(fx, 1, 123);
+          drvPlayEffect(fx);
+        } else if (strcmp(type, "rtp") == 0) {
+          uint8_t amp = step["amplitude"] | 0;
+          drvSetRTP(amp);
+        } else if (strcmp(type, "stop") == 0) {
+          drvStop();
+        }
+      } else if (strcmp(ch, "servo") == 0) {
+        // ── Servo channel ──
+        if (strcmp(type, "pos") == 0) {
+          int posUs = step["pos_us"] | SERVO_CENTER_US;
+          servoMoveTo(posUs);
+        } else if (strcmp(type, "center") == 0) {
+          servoCenter();
+        } else if (strcmp(type, "sweep") == 0) {
+          servoSweepTest();
+        }
+      }
+
+      if (durMs > 0) delay(durMs);
+    }
+  }
+
+  // Auto-stop LRA and center servo after motif completes
+  drvStop();
+  servoCenter();
+  lastMotifMs = millis();
+  Serial.println("[MOTIF] Done");
+}
+
+// ──────────────────────── CALIBRATION ROUTINE ───────────────────────
+void calibrationRoutine() {
+  Serial.println("\n====== CALIBRATION START ======");
+  ledBlink(3, 100, 100);
+
+  // 1. DRV2605L auto-calibration
+  if (drvReady) {
+    bool calOk = drvAutoCalibrate();
+    if (!calOk) {
+      Serial.println("[CAL] LRA auto-cal failed — using defaults");
+      ledBlink(5, 50, 50);  // fast blink = error
+    } else {
+      // Quick buzz to confirm
+      drvPlayEffect(1);  // strong click
+      delay(400);
+      drvStop();
+    }
+  }
+
+  // 2. Servo sweep calibration
+  servoSweepTest();
+
+  // 3. Battery check
+  batteryV = readBatteryVoltage();
+  Serial.printf("[CAL] Battery: %.2f V\n", batteryV);
+  if (batteryV < 3.3 && batteryV > 0.5) {
+    Serial.println("[CAL] ⚠ Low battery warning!");
+    ledBlink(10, 50, 50);
+  }
+
+  ledBlink(2, 200, 200);  // success signal
+  Serial.println("====== CALIBRATION COMPLETE ======\n");
+}
+
+// ════════════════════════ SETUP ═════════════════════════════════════
+void setup() {
+  Serial.begin(115200);
+  delay(500);
+  Serial.println("\n╔════════════════════════════════════════╗");
+  Serial.println("║  Wrist-Puck Dual-Channel Haptic Node   ║");
+  Serial.println("║  ESP32-C3 · DRV2605L · SG51R           ║");
+  Serial.println("╚════════════════════════════════════════╝");
+
+  // LED
+  pinMode(PIN_LED, OUTPUT);
+  digitalWrite(PIN_LED, HIGH);  // off
+
+  // ADC for battery
+  analogReadResolution(12);
+  pinMode(PIN_VBAT_ADC, INPUT);
+
+  // I2C
+  Wire.begin(PIN_SDA, PIN_SCL);
+  Wire.setClock(400000);  // 400 kHz
+
+  // DRV2605L init
+  drvReady = drvInit();
+  if (!drvReady) {
+    Serial.println("[SETUP] DRV2605L init failed — LRA channel disabled");
+  }
+
+  // Servo
+  sg51r.attach(PIN_SERVO, SERVO_MIN_US, SERVO_MAX_US);
+  servoCenter();
+  Serial.println("[SETUP] SG51R servo attached");
+
+  // Calibration
+  calibrationRoutine();
+
+  // Wi-Fi
+  wifiConnect();
+
+  // UDP listener
+  udp.begin(UDP_PORT);
+  Serial.printf("[SETUP] UDP listening on port %d\n", UDP_PORT);
+
+  // Hardware watchdog
+  esp_task_wdt_init(WDT_TIMEOUT_S, true);
+  esp_task_wdt_add(NULL);
+  Serial.printf("[SETUP] Watchdog enabled (%d s)\n", WDT_TIMEOUT_S);
+
+  Serial.println("[SETUP] Ready — awaiting motif packets\n");
+  ledBlink(1, 500, 0);
+}
+
+// ════════════════════════ LOOP ══════════════════════════════════════
+void loop() {
+  esp_task_wdt_reset();
+
+  // ── Wi-Fi reconnect ──
+  static uint32_t lastWifiCheck = 0;
+  if (millis() - lastWifiCheck > 10000) {
+    lastWifiCheck = millis();
+    if (WiFi.status() != WL_CONNECTED) {
+      Serial.println("[WiFi] Lost connection — reconnecting…");
+      wifiConnect();
+      udp.begin(UDP_PORT);
+    }
+  }
+
+  // ── UDP receive ──
+  int packetSize = udp.parsePacket();
+  if (packetSize > 0 && packetSize < 1024) {
+    char buf[1024];
+    int n = udp.read(buf, sizeof(buf) - 1);
+    buf[n] = '\0';
+
+    Serial.printf("[UDP] %d bytes from %s:%d\n",
+                  n, udp.remoteIP().toString().c_str(), udp.remotePort());
+
+    processMotif(buf, n);
+  }
+
+  // ── Safety: auto-center servo after idle ──
+  if (millis() - lastMotifMs > SAFETY_IDLE_MS && currentServoUs != SERVO_CENTER_US) {
+    Serial.println("[SAFETY] Idle timeout — centering servo");
+    servoCenter();
+  }
+
+  // ── Periodic battery check (every 30 s) ──
+  static uint32_t lastBatCheck = 0;
+  if (millis() - lastBatCheck > 30000) {
+    lastBatCheck = millis();
+    batteryV = readBatteryVoltage();
+    if (batteryV < 3.3 && batteryV > 0.5) {
+      Serial.printf("[BAT] Low battery: %.2f V\n", batteryV);
+      drvStop();
+      servoCenter();
+    }
+  }
+
+  delay(1);  // yield
+}

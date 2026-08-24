@@ -1,0 +1,92 @@
+
+<style>
+  body { margin: 0; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 4px 0 16px; }
+  .card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 1rem 1.25rem; }
+  .card-full { grid-column: 1 / -1; }
+  .section-label { font-size: 11px; font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; color: var(--color-text-tertiary); margin: 0 0 10px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  td { padding: 5px 0; vertical-align: top; color: var(--color-text-primary); }
+  td:first-child { color: var(--color-text-secondary); width: 42%; padding-right: 8px; }
+  tr { border-bottom: 0.5px solid var(--color-border-tertiary); }
+  tr:last-child { border-bottom: none; }
+  .badge { display: inline-block; font-size: 10px; font-weight: 500; padding: 2px 7px; border-radius: 4px; line-height: 1.6; }
+  .badge-ok { background: #EAF3DE; color: #3B6D11; }
+  .badge-warn { background: #FAEEDA; color: #854F0B; }
+  .wire-dot { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 5px; vertical-align: middle; }
+  .red-w { background: #e24b4b; }
+  .blk-w { background: #555; }
+  .yel-w { background: #c9940c; }
+  .blu-w { background: #2e7fd4; }
+  .org-w { background: #d87130; }
+  .brn-w { background: #7a4b1e; }
+  .wht-w { background: #999; }
+  .pin { font-family: var(--font-mono); font-size: 12px; color: var(--color-text-secondary); }
+  h2 { font-size: 15px; font-weight: 500; color: var(--color-text-primary); margin: 0 0 14px; display: flex; align-items: center; gap: 8px; }
+  .status-row { display: flex; align-items: center; justify-content: space-between; font-size: 13px; padding: 4px 0; border-bottom: 0.5px solid var(--color-border-tertiary); }
+  .status-row:last-child { border-bottom: none; }
+  .note { font-size: 12px; color: var(--color-text-secondary); background: var(--color-background-secondary); border-left: 3px solid #c9940c; padding: 8px 10px; border-radius: 0 4px 4px 0; margin-top: 10px; }
+</style>
+
+<h2 style="font-size:17px;font-weight:500;color:var(--color-text-primary);margin:0 0 14px;padding-top:4px;">
+  <i class="ti ti-plug" aria-hidden="true" style="font-size:18px;color:var(--color-text-secondary)"></i>
+  Wrist-Puck wiring reference
+</h2>
+
+<div class="grid">
+
+  <div class="card card-full">
+    <p class="section-label">Power architecture — PowerBoost 500C</p>
+    <table>
+      <tr><td><span class="wire-dot blk-w"></span>LiPo 602040</td><td>→ PowerBoost <span class="pin">BAT</span> &amp; <span class="pin">GND</span> &nbsp;<span class="badge badge-warn">check polarity with multimeter first</span></td></tr>
+      <tr><td><span class="wire-dot red-w"></span>PowerBoost <span class="pin">5Vo</span></td><td>→ XIAO <span class="pin">5V</span> pin — powers everything through XIAO 3V3 reg</td></tr>
+      <tr><td><span class="wire-dot red-w"></span>PowerBoost <span class="pin">5Vo</span></td><td>→ Servo VCC (5.2V — rated voltage for SG51R) <span class="badge badge-ok">confirmed</span></td></tr>
+      <tr><td><span class="wire-dot blk-w"></span>PowerBoost <span class="pin">GND</span></td><td>→ common GND rail (XIAO GND, Servo GND, DRV GND)</td></tr>
+      <tr><td><span class="wire-dot wht-w"></span>PowerBoost <span class="pin">LBO</span></td><td>→ XIAO <span class="pin">GPIO2</span> (D0) — low-battery detect, <span class="pin">INPUT_PULLUP</span>, fires below 3.2V</td></tr>
+      <tr><td>USB-C charging</td><td>→ PowerBoost <span class="pin">USB</span> input (charges LiPo in-place)</td></tr>
+    </table>
+    <div class="note">XIAO 3.3V reg powers DRV2605L — do not feed DRV from 5Vo directly.</div>
+  </div>
+
+  <div class="card">
+    <p class="section-label">I²C chain — XIAO → DRV2605L</p>
+    <table>
+      <tr><td><span class="wire-dot red-w"></span>XIAO <span class="pin">3V3</span></td><td>→ DRV <span class="pin">VIN</span></td></tr>
+      <tr><td><span class="wire-dot blk-w"></span>XIAO <span class="pin">GND</span></td><td>→ DRV <span class="pin">GND</span></td></tr>
+      <tr><td><span class="wire-dot blu-w"></span>XIAO <span class="pin">GPIO6</span> (D4)</td><td>→ DRV <span class="pin">SDA</span></td></tr>
+      <tr><td><span class="wire-dot yel-w"></span>XIAO <span class="pin">GPIO7</span> (D5)</td><td>→ DRV <span class="pin">SCL</span></td></tr>
+    </table>
+    <div class="note">DRV2605L address: <strong>0x5A</strong> &nbsp;<span class="badge badge-ok">confirmed at 0x5A</span><br>Firmware: <span class="pin">Wire.begin(6, 7)</span> — must be explicit.</div>
+  </div>
+
+  <div class="card">
+    <p class="section-label">LRA coin motor — DRV2605L haptic pads</p>
+    <table>
+      <tr><td><span class="wire-dot red-w"></span>LRA lead A</td><td>→ DRV <span class="pin">OUT+</span> (haptic pad)</td></tr>
+      <tr><td><span class="wire-dot blk-w"></span>LRA lead B</td><td>→ DRV <span class="pin">OUT−</span> (haptic pad)</td></tr>
+    </table>
+    <div class="note" style="border-color:#2e7fd4;">No polarity — either orientation works.<br><strong>LRA wires are short — extend before final install.</strong> Use 28–30 AWG silicone wire, pre-tin both ends. Allow enough slack to route up through the enclosure void.</div>
+  </div>
+
+  <div class="card">
+    <p class="section-label">Servo — SG51R</p>
+    <table>
+      <tr><td><span class="wire-dot org-w"></span>Orange (signal)</td><td>→ XIAO <span class="pin">GPIO5</span> (D3)</td></tr>
+      <tr><td><span class="wire-dot red-w"></span>Red (VCC)</td><td>→ PowerBoost <span class="pin">5Vo</span></td></tr>
+      <tr><td><span class="wire-dot brn-w"></span>Brown (GND)</td><td>→ common GND</td></tr>
+    </table>
+    <div class="note">Servo mounts on its side, output shaft toward rail. Trim mounting tabs with flush cutters — they won't fit the pocket otherwise.</div>
+  </div>
+
+  <div class="card card-full">
+    <p class="section-label">Component verification status</p>
+    <div class="status-row"><span>I²C scan — DRV2605L at 0x5A</span><span class="badge badge-ok">✓ confirmed</span></div>
+    <div class="status-row"><span>LRA haptic output (effect #1)</span><span class="badge badge-ok">✓ confirmed</span></div>
+    <div class="status-row"><span>Servo sweep (0° → 90° → 180°)</span><span class="badge badge-ok">✓ confirmed</span></div>
+    <div class="status-row"><span>All three simultaneous — no conflicts</span><span class="badge badge-ok">✓ confirmed</span></div>
+    <div class="status-row"><span>Battery standalone run (CONFIDENT / UNCERTAIN / STOP_LOOK)</span><span class="badge badge-ok">✓ confirmed</span></div>
+    <div class="status-row"><span>LBO charging-pause sketch</span><span class="badge badge-ok">✓ implemented</span></div>
+    <div class="status-row"><span>Rewire with shorter runs + LRA wire extension</span><span class="badge badge-warn">⟳ in progress</span></div>
+  </div>
+
+</div>

@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meridian Garden — Site Blueprint</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Rajdhani:wght@300;500;700&display=swap');
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #090e14;
+    color: #a8d4e6;
+    font-family: 'Share Tech Mono', monospace;
+    min-height: 100vh;
+    padding: 12px;
+  }
+
+  h1 {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 1.1rem;
+    letter-spacing: 0.15em;
+    color: #e0f4ff;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .subtitle {
+    font-size: 0.65rem;
+    color: #4a7a99;
+    letter-spacing: 0.1em;
+    margin-bottom: 12px;
+  }
+
+  .canvas-wrap {
+    position: relative;
+    background: #05080d;
+    border: 1px solid #1a3a52;
+    border-radius: 4px;
+    overflow: hidden;
+  }
+
+  canvas {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .legend {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    margin-top: 10px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.6rem;
+    color: #6a9ab8;
+    letter-spacing: 0.06em;
+  }
+
+  .legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .legend-rect {
+    width: 14px;
+    height: 8px;
+    border-radius: 1px;
+    flex-shrink: 0;
+  }
+
+  .stats {
+    margin-top: 10px;
+    border: 1px solid #1a3a52;
+    border-radius: 4px;
+    padding: 10px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  .stat {
+    font-size: 0.6rem;
+    color: #4a7a99;
+    letter-spacing: 0.05em;
+  }
+
+  .stat-val {
+    font-size: 0.85rem;
+    color: #7dd4a8;
+    display: block;
+    margin-top: 2px;
+  }
+
+  .nodes-table {
+    margin-top: 10px;
+    border: 1px solid #1a3a52;
+    border-radius: 4px;
+    padding: 10px;
+    font-size: 0.55rem;
+    color: #4a7a99;
+  }
+
+  .nodes-table h3 {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 0.75rem;
+    color: #7dd4a8;
+    letter-spacing: 0.1em;
+    margin-bottom: 8px;
+  }
+
+  .node-row {
+    display: grid;
+    grid-template-columns: 1.5rem 3fr 3fr 3fr;
+    gap: 4px;
+    padding: 3px 0;
+    border-bottom: 1px solid #0d2030;
+    color: #6a9ab8;
+  }
+
+  .node-row.header {
+    color: #4a7a99;
+    font-size: 0.5rem;
+    border-bottom: 1px solid #1a3a52;
+    padding-bottom: 5px;
+    margin-bottom: 2px;
+  }
+
+  .node-id { color: #f0c060; }
+
+  .compass {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 0.55rem;
+    color: #4a7a99;
+    text-align: center;
+  }
+  .compass-n { color: #e05050; font-size: 0.7rem; font-weight: bold; }
+</style>
+</head>
+<body>
+
+<h1>Meridian Garden — Site Plan</h1>
+<div class="subtitle">SCAN DATE: 2026-05-13 · WHITEHORSE YT · POLYCAM LiDAR EXPORT</div>
+
+<div class="canvas-wrap">
+  <canvas id="bp" width="480" height="860"></canvas>
+  <div class="compass">
+    <div class="compass-n">N ↑</div>
+    <div>SHED</div>
+  </div>
+</div>
+
+<div class="legend">
+  <div class="legend-item">
+    <div class="legend-rect" style="background:#1a4a6a;border:1px solid #2a7aaa;"></div>
+    SCANNED SPACE
+  </div>
+  <div class="legend-item">
+    <div class="legend-rect" style="background:#3a2a0a;border:1px solid #c08020;"></div>
+    SHED STRUCTURE
+  </div>
+  <div class="legend-item">
+    <div class="legend-rect" style="background:rgba(80,160,80,0.15);border:1px solid #50a050;"></div>
+    BED 1 · SHED SIDE (7×13ft)
+  </div>
+  <div class="legend-item">
+    <div class="legend-rect" style="background:rgba(100,180,240,0.12);border:1px solid #5ab0f0;border-style:dashed;"></div>
+    BED 2 · SUNNY ★ (8×16ft)
+  </div>
+  <div class="legend-item">
+    <div class="legend-dot" style="background:#7dd4a8;border:2px solid #3a8a68;"></div>
+    SENSOR NODE (×12)
+  </div>
+  <div class="legend-item">
+    <div class="legend-dot" style="background:#f0c060;border:2px solid #a07020;"></div>
+    SHED HUB / ORIGIN
+  </div>
+</div>
+
+<div class="stats">
+  <div class="stat">ACTIVE BED<span class="stat-val">BED 2 · 8×16 ft</span></div>
+  <div class="stat">GRID LAYOUT<span class="stat-val">3 × 4 NODES</span></div>
+  <div class="stat">NODE COUNT<span class="stat-val">12 POSITIONS</span></div>
+  <div class="stat">NODE SPACING<span class="stat-val">~2.5 ft / 0.76m</span></div>
+  <div class="stat">PVC DEPTH<span class="stat-val">20 – 25 cm</span></div>
+  <div class="stat">ORIGIN<span class="stat-val">SHED SW CORNER</span></div>
+</div>
+
+<div class="nodes-table">
+  <h3>NODE COORDINATE TABLE — BED 2</h3>
+  <div class="node-row header">
+    <span>#</span><span>ROW/COL</span><span>FROM ORIGIN (ft)</span><span>DEPTH</span>
+  </div>
+  <div id="node-table"></div>
+</div>
+
+<script>
+const canvas = document.getElementById('bp');
+const ctx = canvas.getContext('2d');
+
+const W = 480, H = 860;
+const MARGIN = 40;
+const SCALE = 62; // px per metre
+
+// World bounds from scan
+const MIN_X = -3.24, MAX_X = 3.08;
+const MIN_Z = -5.59, MAX_Z = 5.69;
+const WORLD_W = MAX_X - MIN_X; // 6.32m
+const WORLD_H = MAX_Z - MIN_Z; // 11.28m
+
+// Transform: world (x,z) → canvas (cx, cy)
+// North (shed) = top of canvas = negative Z
+function tx(x) { return MARGIN + (x - MIN_X) * SCALE; }
+function tz(z) { return MARGIN + (MAX_Z - z) * SCALE; }  // inverted
+
+// ── DRAW BACKGROUND GRID ───────────────────────────────────
+ctx.fillStyle = '#05080d';
+ctx.fillRect(0, 0, W, H);
+
+// grid lines every 1m
+ctx.strokeStyle = '#0d2030';
+ctx.lineWidth = 0.5;
+for (let x = MIN_X; x <= MAX_X; x += 1) {
+  ctx.beginPath();
+  ctx.moveTo(tx(x), MARGIN);
+  ctx.lineTo(tx(x), H - MARGIN);
+  ctx.stroke();
+}
+for (let z = MIN_Z; z <= MAX_Z; z += 1) {
+  ctx.beginPath();
+  ctx.moveTo(MARGIN, tz(z));
+  ctx.lineTo(W - MARGIN, tz(z));
+  ctx.stroke();
+}
+
+// metre labels
+ctx.fillStyle = '#1a3a52';
+ctx.font = '9px Share Tech Mono';
+ctx.textAlign = 'center';
+for (let x = Math.ceil(MIN_X); x <= MAX_X; x++) {
+  ctx.fillText(x+'m', tx(x), MARGIN - 6);
+}
+ctx.textAlign = 'right';
+for (let z = Math.ceil(MIN_Z); z <= MAX_Z; z++) {
+  ctx.fillText(z+'m', MARGIN - 4, tz(z) + 3);
+}
+
+// ── MAIN SPACE POLYGON ─────────────────────────────────────
+// From Room_1 scan data (main corridor, L-shaped)
+const mainSpace = [
+  [2.274, -5.535],
+  [2.932, -5.535],
+  [2.932,  1.899],
+  [0.442,  1.899],
+  [0.442,  5.635],
+  [-3.188, 5.635],
+  [-3.188,-5.535],
+];
+
+ctx.beginPath();
+mainSpace.forEach(([x,z], i) => {
+  i === 0 ? ctx.moveTo(tx(x), tz(z)) : ctx.lineTo(tx(x), tz(z));
+});
+ctx.closePath();
+ctx.fillStyle = 'rgba(10, 40, 70, 0.6)';
+ctx.fill();
+ctx.strokeStyle = '#2a6a9a';
+ctx.lineWidth = 1.5;
+ctx.stroke();
+
+// ── FENCE LINES ────────────────────────────────────────────
+ctx.strokeStyle = '#1a4a2a';
+ctx.lineWidth = 3;
+ctx.setLineDash([8, 4]);
+// West fence
+ctx.beginPath();
+ctx.moveTo(tx(-3.188), tz(-5.6));
+ctx.lineTo(tx(-3.188), tz(5.7));
+ctx.stroke();
+// East fence (stepped)
+ctx.beginPath();
+ctx.moveTo(tx(2.932), tz(-5.6));
+ctx.lineTo(tx(2.932), tz(1.899));
+ctx.moveTo(tx(0.442), tz(1.899));
+ctx.lineTo(tx(0.442), tz(5.7));
+ctx.stroke();
+ctx.setLineDash([]);
+
+// ── SHED (Room_2) ──────────────────────────────────────────
+const shedX1 = 2.274, shedX2 = 3.032;
+const shedZ1 = -5.535, shedZ2 = -3.219;
+ctx.fillStyle = 'rgba(60, 40, 10, 0.8)';
+ctx.strokeStyle = '#c08020';
+ctx.lineWidth = 1.5;
+ctx.beginPath();
+ctx.rect(tx(shedX1), tz(shedZ2), (shedX2-shedX1)*SCALE, (shedZ2-shedZ1)*SCALE);
+ctx.fill();
+ctx.stroke();
+
+// Shed label
+ctx.fillStyle = '#c08020';
+ctx.font = 'bold 8px Share Tech Mono';
+ctx.textAlign = 'center';
+ctx.fillText('SHED', tx((shedX1+shedX2)/2), tz((shedZ1+shedZ2)/2) + 3);
+
+// Shed origin marker
+ctx.fillStyle = '#f0c060';
+ctx.beginPath();
+ctx.arc(tx(shedX1), tz(shedZ2), 5, 0, Math.PI*2);
+ctx.fill();
+ctx.strokeStyle = '#a07020';
+ctx.lineWidth = 1.5;
+ctx.stroke();
+ctx.fillStyle = '#f0c060';
+ctx.font = '7px Share Tech Mono';
+ctx.textAlign = 'left';
+ctx.fillText('ORIGIN', tx(shedX1)+7, tz(shedZ2)+3);
+
+// ── GARDEN BED 1 (shed side, 7x13ft = 2.13x3.96m) ─────────
+const bed1X1 = -0.6, bed1X2 = bed1X1 + 2.13;
+const bed1Z1 = -3.1, bed1Z2 = bed1Z1 + 3.96;
+ctx.fillStyle = 'rgba(80, 160, 80, 0.1)';
+ctx.strokeStyle = '#50a050';
+ctx.lineWidth = 1;
+ctx.setLineDash([4, 3]);
+ctx.beginPath();
+ctx.rect(tx(bed1X1), tz(bed1Z2), (bed1X2-bed1X1)*SCALE, (bed1Z2-bed1Z1)*SCALE);
+ctx.fill();
+ctx.stroke();
+ctx.setLineDash([]);
+ctx.fillStyle = '#50a050';
+ctx.font = '7px Share Tech Mono';
+ctx.textAlign = 'center';
+ctx.fillText('BED 1  7×13ft', tx((bed1X1+bed1X2)/2), tz((bed1Z1+bed1Z2)/2)+3);
+
+// ── GARDEN BED 2 ★ (sunny, 8x16ft = 2.44x4.88m) ──────────
+// South/sunny end of main corridor
+const bed2X1 = -2.8, bed2X2 = bed2X1 + 2.44;
+const bed2Z1 = 0.6,  bed2Z2 = bed2Z1 + 4.88;
+ctx.fillStyle = 'rgba(100, 180, 240, 0.1)';
+ctx.strokeStyle = '#5ab0f0';
+ctx.lineWidth = 2;
+ctx.setLineDash([]);
+ctx.beginPath();
+ctx.rect(tx(bed2X1), tz(bed2Z2), (bed2X2-bed2X1)*SCALE, (bed2Z2-bed2Z1)*SCALE);
+ctx.fill();
+ctx.stroke();
+
+// BED 2 STAR label
+ctx.fillStyle = '#5ab0f0';
+ctx.font = 'bold 7px Share Tech Mono';
+ctx.textAlign = 'center';
+ctx.fillText('★ BED 2  8×16ft', tx((bed2X1+bed2X2)/2), tz(bed2Z2) - 5);
+
+// ── SENSOR GRID — BED 2 ────────────────────────────────────
+// 3 columns × 4 rows, 1ft margin inside bed
+// Usable: 6ft × 14ft, spacing: 3ft × 4.67ft = 0.91m × 1.42m
+const cols = 3, rows = 4;
+const marginX = 0.15, marginZ = 0.30;
+const usableW = (bed2X2 - bed2X1) - 2*marginX;
+const usableH = (bed2Z2 - bed2Z1) - 2*marginZ;
+const spacingX = usableW / (cols - 1);
+const spacingZ = usableH / (rows - 1);
+
+const nodes = [];
+for (let r = 0; r < rows; r++) {
+  for (let c = 0; c < cols; c++) {
+    const nx = bed2X1 + marginX + c * spacingX;
+    const nz = bed2Z1 + marginZ + r * spacingZ;
+    nodes.push({ id: r*cols+c+1, col: c+1, row: r+1, wx: nx, wz: nz });
+  }
+}
+
+// Draw PVC lines between nodes
+ctx.strokeStyle = 'rgba(125, 212, 168, 0.3)';
+ctx.lineWidth = 1;
+ctx.setLineDash([3,3]);
+// Horizontal runs
+for (let r = 0; r < rows; r++) {
+  const rowNodes = nodes.filter(n => n.row === r+1);
+  ctx.beginPath();
+  rowNodes.forEach((n, i) => {
+    i === 0 ? ctx.moveTo(tx(n.wx), tz(n.wz)) : ctx.lineTo(tx(n.wx), tz(n.wz));
+  });
+  ctx.stroke();
+}
+// Vertical runs
+for (let c = 0; c < cols; c++) {
+  const colNodes = nodes.filter(n => n.col === c+1);
+  ctx.beginPath();
+  colNodes.forEach((n, i) => {
+    i === 0 ? ctx.moveTo(tx(n.wx), tz(n.wz)) : ctx.lineTo(tx(n.wx), tz(n.wz));
+  });
+  ctx.stroke();
+}
+ctx.setLineDash([]);
+
+// Draw nodes
+nodes.forEach(n => {
+  ctx.fillStyle = '#7dd4a8';
+  ctx.beginPath();
+  ctx.arc(tx(n.wx), tz(n.wz), 4.5, 0, Math.PI*2);
+  ctx.fill();
+  ctx.strokeStyle = '#3a8a68';
+  ctx.lineWidth = 1.5;
+  ctx.stroke();
+  // ID label
+  ctx.fillStyle = '#050e0a';
+  ctx.font = 'bold 6px Share Tech Mono';
+  ctx.textAlign = 'center';
+  ctx.fillText(n.id, tx(n.wx), tz(n.wz)+2.5);
+});
+
+// ── DIMENSION ANNOTATIONS ──────────────────────────────────
+ctx.strokeStyle = '#2a6a9a';
+ctx.fillStyle = '#4a9abf';
+ctx.font = '8px Share Tech Mono';
+ctx.lineWidth = 0.8;
+
+// Total space width arrow
+const arrowY = tz(5.9);
+ctx.beginPath();
+ctx.moveTo(tx(-3.188), arrowY);
+ctx.lineTo(tx(2.932), arrowY);
+ctx.stroke();
+ctx.textAlign = 'center';
+ctx.fillText('~6.1m  /  20ft', tx((-3.188+2.932)/2), arrowY + 10);
+
+// Scale bar
+const scaleBarX = MARGIN + 5;
+const scaleBarY = H - 15;
+ctx.strokeStyle = '#2a6a9a';
+ctx.lineWidth = 1.5;
+ctx.beginPath();
+ctx.moveTo(scaleBarX, scaleBarY);
+ctx.lineTo(scaleBarX + SCALE, scaleBarY);
+ctx.moveTo(scaleBarX, scaleBarY-4);
+ctx.lineTo(scaleBarX, scaleBarY+4);
+ctx.moveTo(scaleBarX+SCALE, scaleBarY-4);
+ctx.lineTo(scaleBarX+SCALE, scaleBarY+4);
+ctx.stroke();
+ctx.fillStyle = '#4a9abf';
+ctx.font = '8px Share Tech Mono';
+ctx.textAlign = 'center';
+ctx.fillText('1 m', scaleBarX + SCALE/2, scaleBarY - 5);
+
+// ── TITLE BLOCK ────────────────────────────────────────────
+ctx.fillStyle = 'rgba(5, 8, 13, 0.7)';
+ctx.fillRect(MARGIN, MARGIN, 130, 28);
+ctx.strokeStyle = '#1a3a52';
+ctx.lineWidth = 0.8;
+ctx.strokeRect(MARGIN, MARGIN, 130, 28);
+ctx.fillStyle = '#e0f4ff';
+ctx.font = 'bold 9px Share Tech Mono';
+ctx.textAlign = 'left';
+ctx.fillText('MERIDIAN GARDEN', MARGIN+5, MARGIN+12);
+ctx.fillStyle = '#4a7a99';
+ctx.font = '7px Share Tech Mono';
+ctx.fillText('SITE PLAN · REV 0.1 · MAY 2026', MARGIN+5, MARGIN+23);
+
+// ── BUILD NODE TABLE ───────────────────────────────────────
+const originX_world = shedX1;  // shed SW corner in scan coords
+const originZ_world = shedZ2;
+
+const tableEl = document.getElementById('node-table');
+nodes.forEach(n => {
+  // Distance from shed origin in metres, then feet
+  const dx_m = n.wx - originX_world;
+  const dz_m = n.wz - originZ_world;
+  const dx_ft = (dx_m * 3.281).toFixed(1);
+  const dz_ft = (dz_m * 3.281).toFixed(1);
+
+  const row = document.createElement('div');
+  row.className = 'node-row';
+  row.innerHTML = `
+    <span class="node-id">${String(n.id).padStart(2,'0')}</span>
+    <span>R${n.row} C${n.col}</span>
+    <span>${dx_ft}ft E, ${dz_ft}ft S</span>
+    <span>20–25cm</span>
+  `;
+  tableEl.appendChild(row);
+});
+</script>
+</body>
+</html>

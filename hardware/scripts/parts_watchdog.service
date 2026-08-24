@@ -1,0 +1,16 @@
+[Unit]
+Description=Sensor Ecology Parts Catalogue Watchdog
+After=network.target postgresql.service
+
+[Service]
+Type=simple
+User=sean
+WorkingDirectory=/home/sean
+ExecStart=/usr/bin/python3 /home/sean/parts_watchdog.py
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

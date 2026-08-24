@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>🦔 Shelf Scanner</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/zxing-browser/0.1.1/ZXingBrowser.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Source+Code+Pro:wght@400;600&family=Lato:wght@300;400;700&display=swap');
+
+  :root {
+    --ink:     #1c1208;
+    --bark:    #5c3d1e;
+    --amber:   #c07a2a;
+    --cream:   #f5ede0;
+    --pale:    #faf5ee;
+    --dust:    #e8d9c4;
+    --moss:    #4a6741;
+    --rust:    #a33f2a;
+    --scan-green: #00e676;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Lato', sans-serif;
+    background: var(--pale);
+    color: var(--ink);
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ── Header ── */
+  header {
+    background: var(--bark);
+    color: var(--cream);
+    padding: 14px 16px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.3);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.25rem;
+    letter-spacing: 0.02em;
+  }
+  header h1 span { opacity: 0.6; font-size: 0.9rem; font-weight: 400; }
+  .book-count {
+    font-family: 'Source Code Pro', monospace;
+    background: rgba(255,255,255,0.15);
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    letter-spacing: 0.05em;
+  }
+
+  /* ── Shelf selector ── */
+  .shelf-bar {
+    background: var(--ink);
+    color: var(--cream);
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .shelf-bar label {
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    opacity: 0.6;
+    white-space: nowrap;
+  }
+  .shelf-stepper {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    background: rgba(255,255,255,0.08);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .shelf-stepper button {
+    background: none;
+    border: none;
+    color: var(--amber);
+    font-size: 1.3rem;
+    width: 40px;
+    height: 36px;
+    cursor: pointer;
+    transition: background 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .shelf-stepper button:active { background: rgba(255,255,255,0.1); }
+  .shelf-number {
+    font-family: 'Source Code Pro', monospace;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: var(--cream);
+    min-width: 32px;
+    text-align: center;
+  }
+  .shelf-bar .or { opacity: 0.3; font-size: 0.75rem; }
+  .shelf-input {
+    background: rgba(255,255,255,0.1);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 6px;
+    color: var(--cream);
+    font-family: 'Source Code Pro', monospace;
+    font-size: 0.85rem;
+    padding: 5px 8px;
+    width: 60px;
+    text-align: center;
+  }
+  .shelf-input:focus { outline: none; border-color: var(--amber); }
+
+  /* ── Scanner ── */
+  .scanner-section {
+    position: relative;
+    background: #000;
+    aspect-ratio: 4/3;
+    max-height: 50vw;
+    overflow: hidden;
+  }
+  #video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+
+  /* Scanning overlay */
+  .scan-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+  .scan-frame {
+    width: 65%;
+    aspect-ratio: 3/1;
+    position: relative;
+  }
+  .scan-frame::before, .scan-frame::after,
+  .scan-frame-inner::before, .scan-frame-inner::after {
+    content: '';
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    border-color: var(--scan-green);
+    border-style: solid;
+    opacity: 0.9;
+  }
+  .scan-frame::before  { top: 0;    left: 0;  border-width: 2px 0 0 2px; }
+  .scan-frame::after   { top: 0;    right: 0; border-width: 2px 2px 0 0; }
+  .scan-frame-inner::before  { bottom: 0; left: 0;  border-width: 0 0 2px 2px; }
+  .scan-frame-inner::after   { bottom: 0; right: 0; border-width: 0 2px 2px 0; }
+
+  .scan-line {
+    position: absolute;
+    left: 4px; right: 4px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--scan-green), transparent);
+    box-shadow: 0 0 8px var(--scan-green);
+    animation: scanline 2s ease-in-out infinite;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+  .scanning .scan-line { opacity: 1; }
+  @keyframes scanline {
+    0%   { top: 4px; }
+    50%  { top: calc(100% - 6px); }
+    100% { top: 4px; }
+  }
+
+  .scan-hint {
+    margin-top: 10px;
+    font-size: 0.7rem;
+    color: rgba(255,255,255,0.6);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  /* Flash on success */
+  .flash {
+    position: absolute;
+    inset: 0;
+    background: white;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.05s;
+  }
+  .flash.active { opacity: 0.6; }
+
+  /* ── Scanner controls ── */
+  .scanner-controls {
+    display: flex;
+    gap: 8px;
+    padding: 10px 12px;
+    background: #111;
+  }
+  .btn-scan {
+    flex: 1;
+    background: var(--amber);
+    color: var(--ink);
+    border: none;
+    border-radius: 8px;
+    font-family: 'Lato', sans-serif;
+    font-weight: 700;
+    font-size: 0.9rem;
+    padding: 12px;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    transition: all 0.15s;
+  }
+  .btn-scan:active { transform: scale(0.97); }
+  .btn-scan.active { background: var(--rust); color: white; }
+  .btn-scan.active::before { content: '⏹ '; }
+
+  .btn-manual {
+    background: rgba(255,255,255,0.08);
+    color: rgba(255,255,255,0.7);
+    border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 8px;
+    font-size: 0.8rem;
+    padding: 12px 14px;
+    cursor: pointer;
+    white-space: nowrap;
+    letter-spacing: 0.03em;
+    transition: all 0.15s;
+  }
+  .btn-manual:hover { background: rgba(255,255,255,0.14); }
+
+  /* ── Manual ISBN input ── */
+  .manual-panel {
+    background: #1a1a1a;
+    padding: 10px 12px;
+    display: none;
+    gap: 8px;
+  }
+  .manual-panel.open { display: flex; }
+  .isbn-input {
+    flex: 1;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 6px;
+    color: white;
+    font-family: 'Source Code Pro', monospace;
+    font-size: 0.95rem;
+    padding: 9px 12px;
+    letter-spacing: 0.05em;
+  }
+  .isbn-input:focus { outline: none; border-color: var(--amber); }
+  .btn-lookup {
+    background: var(--amber);
+    color: var(--ink);
+    border: none;
+    border-radius: 6px;
+    font-weight: 700;
+    padding: 9px 14px;
+    cursor: pointer;
+    font-size: 0.85rem;
+  }
+
+  /* ── Status bar ── */
+  .status-bar {
+    background: var(--dust);
+    border-bottom: 1px solid #d4c5ae;
+    padding: 8px 14px;
+    font-size: 0.8rem;
+    min-height: 34px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s;
+  }
+  .status-bar.ok    { background: #e8f5e9; color: var(--moss); border-color: #c8e6c9; }
+  .status-bar.err   { background: #fdecea; color: var(--rust); border-color: #ffcdd2; }
+  .status-bar.info  { background: #fff8e1; color: #7a5f00; border-color: #ffe082; }
+  .status-icon { font-size: 1rem; flex-shrink: 0; }
+  .status-text { flex: 1; line-height: 1.3; }
+
+  /* ── Book list ── */
+  .list-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px 6px;
+    position: sticky;
+    top: 45px;
+    background: var(--pale);
+    border-bottom: 1px solid var(--dust);
+    z-index: 10;
+  }
+  .list-header h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 0.95rem;
+    color: var(--bark);
+    letter-spacing: 0.03em;
+  }
+
+  .btn-export {
+    background: var(--moss);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-family: 'Lato', sans-serif;
+    font-weight: 700;
+    font-size: 0.78rem;
+    padding: 7px 12px;
+    cursor: pointer;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .btn-export:disabled { opacity: 0.4; cursor: not-allowed; }
+  .btn-export:not(:disabled):active { transform: scale(0.96); }
+  .btn-clear {
+    background: none;
+    border: 1px solid var(--dust);
+    border-radius: 6px;
+    color: var(--rust);
+    font-size: 0.75rem;
+    padding: 6px 10px;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn-clear:hover { background: #fdecea; }
+  .list-actions { display: flex; gap: 6px; align-items: center; }
+
+  .book-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 6px 0 80px;
+  }
+
+  .book-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--dust);
+    animation: slideIn 0.2s ease-out;
+    transition: background 0.15s;
+  }
+  .book-item:active { background: var(--dust); }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(-8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .shelf-badge {
+    background: var(--bark);
+    color: var(--cream);
+    font-family: 'Source Code Pro', monospace;
+    font-size: 0.65rem;
+    font-weight: 600;
+    padding: 3px 6px;
+    border-radius: 4px;
+    white-space: nowrap;
+    flex-shrink: 0;
+    margin-top: 2px;
+    letter-spacing: 0.05em;
+  }
+  .book-info { flex: 1; min-width: 0; }
+  .book-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 0.9rem;
+    font-weight: 500;
+    line-height: 1.3;
+    color: var(--ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .book-author {
+    font-size: 0.75rem;
+    color: #7a6550;
+    margin-top: 1px;
+  }
+  .book-isbn {
+    font-family: 'Source Code Pro', monospace;
+    font-size: 0.68rem;
+    color: #b0a090;
+    margin-top: 2px;
+    letter-spacing: 0.03em;
+  }
+  .book-remove {
+    background: none;
+    border: none;
+    color: #ccc;
+    cursor: pointer;
+    font-size: 1.1rem;
+    padding: 2px 4px;
+    border-radius: 4px;
+    flex-shrink: 0;
+    transition: color 0.15s;
+    line-height: 1;
+  }
+  .book-remove:hover { color: var(--rust); }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #b0a090;
+  }
+  .empty-state .icon { font-size: 2.5rem; display: block; margin-bottom: 10px; }
+  .empty-state p { font-size: 0.85rem; line-height: 1.6; }
+
+  /* Loading spinner */
+  .spinner {
+    width: 14px; height: 14px;
+    border: 2px solid rgba(0,0,0,0.2);
+    border-top-color: var(--amber);
+    border-radius: 50%;
+    animation: spin 0.6s linear infinite;
+    display: inline-block;
+    flex-shrink: 0;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Toast */
+  .toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(80px);
+    background: var(--ink);
+    color: var(--cream);
+    padding: 10px 18px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    z-index: 999;
+    white-space: nowrap;
+    pointer-events: none;
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* Duplicate warning */
+  .dup-badge {
+    font-size: 0.65rem;
+    background: #fff3cd;
+    color: #856404;
+    border: 1px solid #ffc107;
+    padding: 1px 5px;
+    border-radius: 3px;
+    margin-left: 4px;
+    vertical-align: middle;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🦔 Shelf Scanner <span>→ CSV</span></h1>
+  <div class="book-count" id="countBadge">0 books</div>
+</header>
+
+<div class="shelf-bar">
+  <label>Shelf</label>
+  <div class="shelf-stepper">
+    <button onclick="changeShelf(-1)">−</button>
+    <span class="shelf-number" id="shelfDisplay">1</span>
+    <button onclick="changeShelf(1)">+</button>
+  </div>
+  <span class="or">or type</span>
+  <input type="number" class="shelf-input" id="shelfInput" min="1" max="27"
+         value="1" onchange="setShelf(this.value)" oninput="setShelf(this.value)">
+</div>
+
+<div class="scanner-section" id="scannerSection">
+  <video id="video" playsinline muted></video>
+  <div class="scan-overlay">
+    <div class="scan-frame">
+      <div class="scan-frame-inner">
+        <div class="scan-line"></div>
+      </div>
+    </div>
+    <div class="scan-hint">align barcode within frame</div>
+  </div>
+  <div class="flash" id="flash"></div>
+</div>
+
+<div class="scanner-controls">
+  <button class="btn-scan" id="scanBtn" onclick="toggleScanner()">▶ Start Scanning</button>
+  <button class="btn-manual" onclick="toggleManual()">ISBN ✎</button>
+</div>
+
+<div class="manual-panel" id="manualPanel">
+  <input type="text" class="isbn-input" id="isbnInput"
+         placeholder="9780000000000"
+         inputmode="numeric"
+         onkeydown="if(event.key==='Enter') lookupISBN(document.getElementById('isbnInput').value)">
+  <button class="btn-lookup" onclick="lookupISBN(document.getElementById('isbnInput').value)">Look up</button>
+</div>
+
+<div class="status-bar" id="statusBar">
+  <span class="status-icon">📷</span>
+  <span class="status-text" id="statusText">Press Start Scanning to begin</span>
+</div>
+
+<div class="list-header">
+  <h2>Scanned Books</h2>
+  <div class="list-actions">
+    <button class="btn-clear" onclick="clearAll()" id="clearBtn" style="display:none">Clear all</button>
+    <button class="btn-export" id="exportBtn" onclick="exportCSV()" disabled>
+      ⬇ Export CSV
+    </button>
+  </div>
+</div>
+
+<div class="book-list" id="bookList">
+  <div class="empty-state">
+    <span class="icon">📚</span>
+    <p>Scanned books will appear here.<br>Set your shelf number, then start scanning.</p>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────
+let books = [];
+let currentShelf = 1;
+let scanning = false;
+let codeReader = null;
+let lastScanned = '';
+let lastScannedTime = 0;
+let manualOpen = false;
+
+// ── Shelf controls ─────────────────────────────────────────────
+function setShelf(val) {
+  const n = Math.max(1, Math.min(27, parseInt(val) || 1));
+  currentShelf = n;
+  document.getElementById('shelfDisplay').textContent = n;
+  document.getElementById('shelfInput').value = n;
+}
+function changeShelf(delta) {
+  setShelf(currentShelf + delta);
+}
+
+// ── Scanner ────────────────────────────────────────────────────
+async function toggleScanner() {
+  if (scanning) {
+    stopScanner();
+  } else {
+    await startScanner();
+  }
+}
+
+async function startScanner() {
+  const btn = document.getElementById('scanBtn');
+  btn.textContent = '⏳ Starting…';
+  btn.disabled = true;
+
+  try {
+    // Try ZXing first
+    if (window.ZXingBrowser) {
+      codeReader = new ZXingBrowser.BrowserMultiFormatReader();
+      const videoEl = document.getElementById('video');
+      const devices = await ZXingBrowser.BrowserMultiFormatReader.listVideoInputDevices();
+
+      // Prefer back camera
+      const backCam = devices.find(d =>
+        /back|rear|environment/i.test(d.label)
+      ) || devices[devices.length - 1];
+
+      await codeReader.decodeFromVideoDevice(
+        backCam?.deviceId || undefined,
+        videoEl,
+        (result, err) => {
+          if (result) handleBarcode(result.getText());
+        }
+      );
+    } else {
+      throw new Error('ZXing not loaded');
+    }
+
+    scanning = true;
+    btn.textContent = '⏹ Stop Scanning';
+    btn.disabled = false;
+    btn.classList.add('active');
+    document.getElementById('scannerSection').classList.add('scanning');
+    setStatus('info', '🔍', 'Scanning… point camera at a barcode');
+  } catch (e) {
+    btn.textContent = '▶ Start Scanning';
+    btn.disabled = false;
+    setStatus('err', '⚠', 'Camera access failed — use ISBN entry instead');
+  }
+}
+
+function stopScanner() {
+  if (codeReader) {
+    codeReader.reset();
+    codeReader = null;
+  }
+  scanning = false;
+  const btn = document.getElementById('scanBtn');
+  btn.textContent = '▶ Start Scanning';
+  btn.classList.remove('active');
+  document.getElementById('scannerSection').classList.remove('scanning');
+  setStatus('info', '📷', 'Press Start Scanning to begin');
+
+  // Clear video
+  const vid = document.getElementById('video');
+  if (vid.srcObject) {
+    vid.srcObject.getTracks().forEach(t => t.stop());
+    vid.srcObject = null;
+  }
+}
+
+function handleBarcode(code) {
+  const now = Date.now();
+  // Debounce — same code within 3 seconds = ignore
+  if (code === lastScanned && now - lastScannedTime < 3000) return;
+  lastScanned = code;
+  lastScannedTime = now;
+
+  // Flash
+  const flash = document.getElementById('flash');
+  flash.classList.add('active');
+  setTimeout(() => flash.classList.remove('active'), 120);
+
+  // Vibrate if available
+  if (navigator.vibrate) navigator.vibrate(40);
+
+  // EAN-13 / ISBN-13 / UPC-A / ISBN-10
+  const clean = code.replace(/[^0-9X]/gi, '');
+  if (clean.length >= 10) {
+    lookupISBN(clean);
+  }
+}
+
+// ── Manual entry ───────────────────────────────────────────────
+function toggleManual() {
+  manualOpen = !manualOpen;
+  document.getElementById('manualPanel').classList.toggle('open', manualOpen);
+  if (manualOpen) setTimeout(() => document.getElementById('isbnInput').focus(), 100);
+}
+
+// ── Open Library lookup ────────────────────────────────────────
+async function lookupISBN(isbn) {
+  const clean = isbn.replace(/[^0-9X]/gi, '').toUpperCase();
+  if (clean.length < 10) {
+    setStatus('err', '✗', 'Enter a valid ISBN (10 or 13 digits)');
+    return;
+  }
+
+  setStatus('info', null, `Looking up ${clean}…`, true);
+
+  try {
+    // Try Open Library
+    const url = `https://openlibrary.org/api/books?bibkeys=ISBN:${clean}&format=json&jscmd=data`;
+    const resp = await fetch(url);
+    const data = await resp.json();
+    const key = `ISBN:${clean}`;
+
+    if (data[key]) {
+      const b = data[key];
+      const book = {
+        isbn13: clean.length === 13 ? clean : '',
+        isbn10: clean.length === 10 ? clean : '',
+        title: b.title || 'Unknown Title',
+        creators: (b.authors || []).map(a => a.name).join(', ') || '',
+        publisher: (b.publishers || []).map(p => p.name).join(', ') || '',
+        publish_date: b.publish_date || '',
+        pages: b.number_of_pages || '',
+        description: b.notes || b.subtitle || '',
+        shelf: currentShelf
+      };
+      addBook(book, clean);
+    } else {
+      // Fallback: add with just the ISBN
+      addBook({
+        isbn13: clean.length === 13 ? clean : '',
+        isbn10: clean.length === 10 ? clean : '',
+        title: `ISBN: ${clean}`,
+        creators: '',
+        publisher: '',
+        publish_date: '',
+        pages: '',
+        description: '',
+        shelf: currentShelf
+      }, clean, true);
+    }
+  } catch (e) {
+    // Network error — still add with ISBN only
+    addBook({
+      isbn13: clean.length === 13 ? clean : '',
+      isbn10: clean.length === 10 ? clean : '',
+      title: `ISBN: ${clean}`,
+      creators: '',
+      publisher: '',
+      publish_date: '',
+      pages: '',
+      description: '',
+      shelf: currentShelf
+    }, clean, true);
+  }
+
+  // Clear manual input
+  document.getElementById('isbnInput').value = '';
+}
+
+// ── Book management ────────────────────────────────────────────
+function addBook(book, rawIsbn, lookupFailed = false) {
+  // Check duplicate by ISBN
+  const existing = books.find(b =>
+    (b.isbn13 && b.isbn13 === book.isbn13) ||
+    (b.isbn10 && b.isbn10 === book.isbn10) ||
+    (rawIsbn && (b.isbn13 === rawIsbn || b.isbn10 === rawIsbn))
+  );
+
+  if (existing) {
+    setStatus('info', '⟳', `Already scanned: ${existing.title}`);
+    showToast('Already in list');
+    return;
+  }
+
+  book.id = Date.now();
+  books.unshift(book);
+  renderList();
+
+  if (lookupFailed) {
+    setStatus('info', '⚠', `Added ${rawIsbn} — title lookup failed (offline?)`);
+  } else {
+    setStatus('ok', '✓', `Added: ${book.title}${book.creators ? ' — ' + book.creators : ''}`);
+    showToast('✓ Added to list');
+  }
+}
+
+function removeBook(id) {
+  books = books.filter(b => b.id !== id);
+  renderList();
+  updateCount();
+}
+
+function clearAll() {
+  if (!confirm(`Remove all ${books.length} scanned books?`)) return;
+  books = [];
+  renderList();
+}
+
+// ── Render ─────────────────────────────────────────────────────
+function renderList() {
+  const list = document.getElementById('bookList');
+  updateCount();
+
+  if (books.length === 0) {
+    list.innerHTML = `
+      <div class="empty-state">
+        <span class="icon">📚</span>
+        <p>Scanned books will appear here.<br>Set your shelf number, then start scanning.</p>
+      </div>`;
+    document.getElementById('exportBtn').disabled = true;
+    document.getElementById('clearBtn').style.display = 'none';
+    return;
+  }
+
+  document.getElementById('exportBtn').disabled = false;
+  document.getElementById('clearBtn').style.display = '';
+
+  list.innerHTML = books.map(b => `
+    <div class="book-item">
+      <span class="shelf-badge">S${b.shelf}</span>
+      <div class="book-info">
+        <div class="book-title">${esc(b.title)}</div>
+        ${b.creators ? `<div class="book-author">${esc(b.creators)}</div>` : ''}
+        <div class="book-isbn">${b.isbn13 || b.isbn10 || '—'}</div>
+      </div>
+      <button class="book-remove" onclick="removeBook(${b.id})" title="Remove">×</button>
+    </div>
+  `).join('');
+}
+
+function updateCount() {
+  const n = books.length;
+  document.getElementById('countBadge').textContent = `${n} book${n !== 1 ? 's' : ''}`;
+}
+
+// ── CSV Export ─────────────────────────────────────────────────
+function exportCSV() {
+  if (books.length === 0) return;
+
+  // Match your library.csv column format exactly
+  const headers = [
+    'item_type','title','creators','first_name','last_name',
+    'ean_isbn13','upc_isbn10','description','publisher','publish_date',
+    'group','tags','notes','price','length','number_of_discs',
+    'number_of_players','age_group','ensemble','aspect_ratio','esrb',
+    'rating','review','review_date','status','began','completed','added','copies',
+    'shelf'  // extra column for Hedgehog import
+  ];
+
+  const today = new Date().toISOString().split('T')[0];
+
+  const rows = books.map(b => {
+    const nameParts = b.creators ? b.creators.split(' ') : ['', ''];
+    const lastName  = nameParts.length > 1 ? nameParts[nameParts.length - 1] : '';
+    const firstName = nameParts.length > 1 ? nameParts.slice(0, -1).join(' ') : nameParts[0] || '';
+
+    return [
+      'book',
+      b.title,
+      b.creators,
+      firstName,
+      lastName,
+      b.isbn13 || '',
+      b.isbn10 || '',
+      b.description || '',
+      b.publisher || '',
+      b.publish_date || '',
+      '', // group
+      '', // tags
+      '', // notes
+      '', // price
+      b.pages || '',
+      '', '', '', '', '', '', '', '', '', '', '', '',
+      today, // added
+      '1',   // copies
+      b.shelf // shelf
+    ];
+  });
+
+  const csv = [headers, ...rows]
+    .map(row => row.map(cell => {
+      const s = String(cell ?? '');
+      return s.includes(',') || s.includes('"') || s.includes('\n')
+        ? `"${s.replace(/"/g, '""')}"` : s;
+    }).join(','))
+    .join('\n');
+
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `shelf-scan-${today}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+
+  showToast(`⬇ Exported ${books.length} books`);
+}
+
+// ── UI helpers ─────────────────────────────────────────────────
+function setStatus(type, icon, text, loading = false) {
+  const bar = document.getElementById('statusBar');
+  const iconEl = bar.querySelector('.status-icon');
+  const textEl = document.getElementById('statusText');
+  bar.className = 'status-bar ' + (type || '');
+  textEl.textContent = text;
+  if (loading) {
+    iconEl.innerHTML = '<span class="spinner"></span>';
+  } else {
+    iconEl.textContent = icon || '';
+  }
+}
+
+let toastTimer;
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── Init ───────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  renderList();
+
+  // Handle ZXing load failure gracefully
+  setTimeout(() => {
+    if (!window.ZXingBrowser) {
+      document.getElementById('scanBtn').textContent = '▶ Start Scanning';
+      setStatus('info', '⚠', 'Barcode library loading… check your internet connection');
+    }
+  }, 3000);
+});
+</script>
+</body>
+</html>

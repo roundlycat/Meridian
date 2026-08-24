@@ -1,0 +1,1102 @@
+Wrist-Puck Dual-Channel Haptic 
+Node
+Complete Build Guide
+Canada-Sourced BOM · ESP32-C3 Firmware · 3D-Printable Enclosure
+Author: Sean (Whitehorse, YT)
+May 2026  |  Revision 1.0
+Table of Contents
+1. Project Overview
+2. Bill of Materials (BOM) — Canada Sourced
+3. Wiring Diagram
+4. Assembly Notes
+5. Testing Checklist
+6. JSON Motif Schema Reference
+7. Troubleshooting
+8. Future Enhancements
+1. Project Overview
+The Wrist-Puck is a compact, wrist-worn haptic feedback device that combines two 
+distinct sensory channels into a single 68 mm puck form factor. It is designed for 
+use in VR/AR research, accessibility interfaces, and experimental interaction design.
+Dual-Channel Architecture
+● Texture Channel: A 10 mm coin-type Linear Resonant Actuator (LRA) driven 
+by a TI DRV2605L haptic controller. This channel delivers fine vibrotactile 
+patterns including clicks, buzzes, and textural feedback using the 
+DRV2605L’s built-in 123-effect waveform library or real-time playback (RTP) 
+mode.
+● Weight-Shift Channel: An Adafruit SG51R sub-micro servo actuates a 
+sliding brass mass (~8–10 g) along a 30 mm linear rail inside the enclosure. 
+As the mass moves, the user perceives a shift in weight or tilt on the wrist, 
+simulating directional force cues.
+The device is controlled wirelessly via Wi-Fi/UDP using JSON-formatted haptic motifs. 
+A Seeed Studio XIAO ESP32-C3 serves as the brain, providing Wi-Fi 802.11 b/g/n, 
+BLE 5.0, USB-C connectivity, and built-in LiPo charging in a tiny 21×17.8 mm 
+package.
+Key Specifications
+Parameter Value
+Puck diameter 68 mm
+Height 22 mm
+Weight (assembled, est.) ~55 g
+Wireless Wi-Fi 802.11 b/g/n, BLE 5.0
+Protocol UDP port 9000, JSON motifs
+Battery 3.7 V, 400–500 mAh LiPo
+Runtime (est.) 2–4 hours active use
+Charging USB-C via XIAO built-in charger (or 
+TP4056 backup)
+2. Bill of Materials (BOM) — 
+Canada Sourced
+All components below are available from Canadian suppliers or Amazon.ca with 
+domestic shipping. Prices are in Canadian Dollars (CAD) as of May 2026.
+# Compo
+nent
+Descri
+ption
+Suppli
+er
+SKU / 
+ASIN
+Qty Est. 
+Price 
+(CAD)
+Notes
+1 ESP32-
+C3 Dev 
+Board
+Seeed 
+Studio 
+XIAO 
+ESP32-
+C3, 
+21×17.
+8 mm, 
+Wi-
+Fi+BLE, 
+USB-C, 
+LiPo 
+chargin
+g built-
+in
+Amazon
+.ca
+ASIN: 
+B0B94J
+Z2YF
+1 ~$43.7
+3
+Amazon
+’s 
+Choice; 
+ships 
+free. 
+Built-in 
+LiPo 
+charge 
+circuit 
+makes 
+TP4056 
+optional
+.
+2 Haptic 
+Driver
+DRV260
+5L I2C 
+Haptic 
+Motor 
+Controll
+er 
+Breakou
+t Board 
+(3–5 V)
+Amazon
+.ca
+Search 
+“DRV26
+05L 
+breakou
+t” 
+(NUEAY
+MS or 
+similar)
+1 ~$13.8
+1
+Generic 
+breakou
+t 
+compati
+ble with 
+Adafruit 
+library. 
+Verify 
+I2C pull-
+ups 
+present 
+on 
+board.
+3 10 mm 
+Coin 
+LRA
+10 mm 
+Linear 
+Resona
+nt 
+Actuato
+r, C10-
+100 
+type, 
+~175 
+Hz, 2.0 
+V rated
+DigiKey.
+ca
+C10-
+100 
+(Precisi
+on 
+Microdri
+ves) or 
+equiv.
+1 ~$8–12 Substitu
+te with 
+any 8–
+12 mm 
+coin 
+LRA. 
+Check 
+resonan
+t 
+frequen
+cy for 
+DRV260
+5L auto-
+cal.
+4 Sub-
+Micro 
+Servo
+Adafruit 
+SG51R, 
+5 g, 
+25×22×
+Mouser.
+ca
+Part #: 
+485-
+2201
+1 ~$8.63 Not 
+readily 
+on 
+Amazon
+# Compo
+nent
+Descri
+ption
+Suppli
+er
+SKU / 
+ASIN
+Qty Est. 
+Price 
+(CAD)
+Notes
+12 mm, 
+0.6 
+kg·cm 
+torque, 
+4.8 V
+.ca. Alt: 
+PiShop.
+ca 
+(~$12.9
+5). 
+Substitu
+te: any 
+5–9 g 
+micro 
+servo.
+5 LiPo 
+Battery
+3.7 V 
+500 
+mAh 
+Lithium 
+Polymer
+, JST-PH 
+2.0 
+connect
+or, 
+~35×25
+×5 mm
+Amazon
+.ca
+Search 
+“EEMB 
+500mAh 
+602040 
+LiPo 
+JST”
+1 ~$20.0
+0
+Verify 
+JST 
+polarity 
+matche
+s XIAO 
+before 
+connect
+ing! 
+XIAO 
+uses 
+JST-SH 
+1.0 mm 
+natively
+; may 
+need 
+adapter 
+or direct 
+solder.
+6 LiPo 
+Charge
+r 
+Module
+TP4056 
+USB-C 
+1A 
+Chargin
+g Board 
+with 
+dual 
+protecti
+on 
+(DW01 
++ 
+FS8205)
+Amazon
+.ca
+Search 
+“TP405
+6 Type-
+C USB 
+3pcs”
+1 (from 
+3-pack)
+~$3.17 Optional 
+if using 
+XIAO’s 
+built-in 
+charger. 
+Useful 
+as 
+standal
+one 
+charge 
+board 
+or 
+backup.
+7 JST 
+Connec
+tor Kit
+JST PH 
+2.0 mm 
+Wire 
+Connect
+or Kit, 
+Amazon
+.ca
+Search 
+“ZYNCU
+E JST PH 
+2.0mm 
+450pcs”
+1 kit ~$10.7
+9
+For 
+battery, 
+servo, 
+LRA, 
+and 
+# Compo
+nent
+Descri
+ption
+Suppli
+er
+SKU / 
+ASIN
+Qty Est. 
+Price 
+(CAD)
+Notes
+450 
+pcs, 
+2/3/4-
+pin 
+housing
+s + 
+female 
+headers
+inter-
+board 
+wiring. 
+Enough 
+for 
+multiple 
+nodes.
+8 Perfbo
+ard
+Small 
+prototy
+pe PCB 
+board, 
+~20×15 
+mm or 
+30×20 
+mm
+Amazon
+.ca
+Search 
+“mini 
+perfboa
+rd 
+assortm
+ent”
+1 ~$1.50 From 
+assortm
+ent 
+pack 
+(~$10–
+12 for 
+30+ 
+boards). 
+Used for 
+voltage 
+divider 
+and 
+wire 
+junction
+.
+9 Resisto
+rs
+100 kΩ 
+×2 
+(battery 
+voltage 
+divider), 
+4.7 kΩ 
+×2 (I2C 
+pull-
+ups, if 
+not on 
+DRV 
+board)
+Amazon
+.ca
+From 
+any 
+resistor 
+assortm
+ent kit
+1 kit ~$0.50 1/4 W 
+or 1/8 
+W 
+through
+-hole.
+10 Hooku
+p Wire
+26–30 
+AWG 
+silicone 
+strande
+d wire, 
+assorte
+d colors
+Amazon
+.ca
+Search 
+“30 
+AWG 
+silicone 
+wire kit”
+1 ~$12.0
+0
+Flexible 
+silicone 
+insulati
+on 
+preferre
+d for 
+wearabl
+e 
+routing.
+11 Sliding Brass or Hardwa Search 1 ~$2.00 Rides in 
+# Compo
+nent
+Descri
+ption
+Suppli
+er
+SKU / 
+ASIN
+Qty Est. 
+Price 
+(CAD)
+Notes
+Mass steel 
+slug, 
+~8–10 
+g, 
+~5×5×
+12 mm 
+(or M5 
+brass 
+hex nut 
+stacked
+)
+re 
+store / 
+Amazon
+.ca
+“M5 
+brass 
+nut” or 
+machin
+e a 
+small 
+slug
+the 6 
+mm-
+wide 
+rail slot 
+alongsid
+e the 
+servo. 
+Attach 
+to servo 
+horn via 
+short 
+linkage 
+arm.
+12 M2 
+Hardw
+are
+M2×6 
+mm 
+screws 
++ M2 
+nuts 
+(for 
+mountin
+g 
+boards 
+to 
+enclosu
+re 
+posts)
+Amazon
+.ca
+Search 
+“M2 
+screw 
+nut 
+assortm
+ent”
+4 sets ~$0.50 Nylon 
+preferre
+d to 
+avoid 
+shorts.
+13 3D 
+Print 
+Filame
+nt
+PLA or 
+PETG, 
+any 
+color, 
+~25 g 
+per 
+puck
+User’s 
+stock
+N/A ~25 g ~$1.00 0.2 mm 
+layer 
+height, 
+20% 
+infill 
+recomm
+ended.
+14 Wrist 
+Strap
+22 mm 
+watch 
+band 
+(NATO 
+style or 
+silicone 
+sport 
+band)
+Amazon
+.ca
+Search 
+“22mm 
+NATO 
+watch 
+strap”
+1 ~$8–15 Threads 
+through 
+the 
+enclosu
+re strap 
+slots.
+Total Estimated Cost: ~$115–135 CAD per node
+Well under $150 budget target.
+Cost-Saving Tip
+Prices checked May 2026. Amazon.ca prices fluctuate; some items ship via third-
+party sellers. The XIAO ESP32-C3 is the most expensive single component — if 
+sourcing directly from Seeed Studio (seeedstudio.com), the board is ~$6.99 USD 
++ shipping, which may save $20+ CAD.
+3. Wiring Diagram
+Pin Connection Table
+Signal XIAO ESP32-
+C3 Pin
+Target Wire Color 
+(suggested)
+Notes
+I2C SDA GPIO6 (D4) DRV2605L 
+SDA
+Blue 4.7 kΩ pull-up 
+to 3.3 V if 
+needed
+I2C SCL GPIO7 (D5) DRV2605L 
+SCL
+Yellow 4.7 kΩ pull-up 
+to 3.3 V if 
+needed
+Servo PWM GPIO5 (D3) SG51R Signal 
+(Orange)
+Orange Direct 
+connection
+Battery ADC GPIO2 (D0) Voltage 
+divider 
+midpoint
+Green 100k/100k 
+divider from 
+VBAT
+3.3 V Power 3V3 DRV2605L VIN Red 3.3 V rail
+5 V Power 5V (USB) SG51R VCC 
+(Red)
+Red Servo needs 
+4.8–5 V
+GND GND All GND Black Common 
+Signal XIAO ESP32-
+C3 Pin
+Target Wire Color 
+(suggested)
+Notes
+ground bus
+LRA+ — DRV2605L 
+OUT+
+White DRV drives 
+LRA directly
+LRA– — DRV2605L 
+OUT–
+White DRV drives 
+LRA directly
+Battery+ BAT+ pad LiPo + (via 
+JST)
+Red Through 
+protection 
+circuit
+Battery– BAT– pad / 
+GND
+LiPo – Black Common 
+ground
+ASCII Wiring Schematic
++---------------------+                     |   XIAO ESP32-C3     | 
+|                     |     +---- GPIO6 ----| D4 (SDA)            |     |  +- 
+GPIO7 ----| D5 (SCL)            |     |  |  + GPIO5 --| D3 (PWM)            | 
+|  |  |  + GP2 -| D0 (ADC)            |     |  |  |  |      |               
+3V3 --|----- DRV2605L VIN     |  |  |  |      |                5V --|----- 
+SG51R VCC (Red)     |  |  |  |      |               GND --|--+-- Common GND 
+bus     |  |  |  |      |              BAT+ --|--+-- LiPo + (JST)     |  |  | 
+|      +---------------------+  |     |  |  |  | 
+|     |  |  |  |    +----------------+         |     |  |  |  |    |   
+DRV2605L     |         |     |  |  |  |    |   Breakout     |         |     
++--+--+--+----| SDA            |         |     |  +--+--+----| SCL 
+|         |     |  |  |  |    | VIN -----------|--- 3.3V |     |  |  |  |    
+| GND -----------|--- GND  |     |  |  |  |    | OUT+ ==========#=> LRA + | 
+|  |  |  |    | OUT- ==========#=> LRA - |     |  |  |  |    
++----------------+         |     |  |  |  |                               | 
+|  |  |  |    +----------------+         |     |  |  |  |    |    SG51R 
+|         |     |  |  |  |    |    Servo       |         |     |  |  +--
++----| Signal (Org)   |         |     |  |     |    | VCC (Red) -----|--- 5V 
+|     |  |     |    | GND (Brn) -----|--- GND  |     |  |     |    
++----------------+         |     |  |     |                               | 
+|  |     |    +----------------+         |     |  |     |    | Voltage Div 
+|         |     |  |     +----| Midpoint       |         |     |  |          
+| VBAT--100k--Mid--100k--GND     |  |          +----------------+         | 
+|  |                                     |     |  |          
++----------------+         |     |  |          |   10mm LRA     |         | 
+|  |          |   (coin)       |         |     |  |          |   Connected 
+|         |     |  |          |   to DRV OUT   |         |     |  |          
++----------------+         |     |  |                                     | 
+|  |          +----------------+         |     |  |          |  LiPo 500mAh 
+|         |     |  |          |  3.7V          |         |     |  |          
+|  JST-PH 2.0    |---------+     |  |          +----------------+     +--+
+Power Notes
+Important — Power Considerations
+•  The XIAO ESP32-C3 has a built-in LiPo charge IC. Connect the LiPo directly to 
+the BAT pads on the XIAO.
+•  The servo draws from the 5 V USB rail. When on battery only, the 3.3 V 
+output may not be sufficient for the servo — consider a small boost converter 
+(3.3 V → 5 V) for battery-only operation, OR accept reduced servo torque at 
+3.3 V.
+CRITICAL — JST Polarity
+Verify JST polarity before connecting any LiPo battery. The XIAO uses + on the 
+left when the USB port faces you. Reversed polarity WILL destroy the board 
+instantly.
+4. Assembly Notes
+Tools Required
+Tool Specification / Notes
+Soldering iron Fine tip, 300–350 °C
+Solder Lead-free, 0.5 mm preferred
+Wire strippers 30 AWG capable
+Flush cutters For trimming leads and wire
+Small Phillips screwdriver M2 size
+3D printer FDM, 0.4 mm nozzle
+Multimeter Continuity, voltage, resistance
+Hot glue gun Optional, for securing LiPo
+Tool Specification / Notes
+Needle-nose pliers For bending linkage wire
+Computer With Arduino IDE 2.x installed
+Step 1: Print the Enclosure
+9. Open wrist_puck_enclosure.scad in OpenSCAD.
+10.Set RENDER = "bottom" → Press F6 (full render) → Export as bottom_shell.stl.
+11.Set RENDER = "lid" → Press F6 → Export as lid.stl.
+12.Slice at 0.2 mm layer height, 20% infill, PLA or PETG, no supports needed.
+13.Print time: ~1.5 hours total for both parts.
+14.Test-fit snap: the lid should click into the bottom shell with light pressure.
+Step 2: Prepare the Perfboard Junction
+15.Cut perfboard to ~20×15 mm.
+16.Solder a 3-pin header row for the power bus (+3.3 V, +5 V, GND).
+17.Solder the 100k/100k voltage divider (VBAT → midpoint → GND).
+18.Add 4.7 kΩ I2C pull-up resistors if your DRV2605L breakout doesn’t have 
+them.
+19.Run hookup wires from the junction to each component location (leave 40 
+mm leads).
+Step 3: Wire the DRV2605L Breakout
+20.Solder 4 wires to DRV2605L: VIN, GND, SDA, SCL.
+21.Solder the LRA motor leads to the OUT+/OUT– pads on the DRV2605L.
+22.Use JST connectors for detachable connections, or solder directly for a 
+permanent build.
+23.Test I2C address detection before installing in enclosure (address should read 
+0x5A).
+Step 4: Wire the SG51R Servo
+24.The SG51R comes with a standard 3-pin servo connector (Brown = GND, Red 
+= VCC, Orange = Signal).
+25.Trim wires to ~60 mm.
+26.Solder or crimp JST-PH connectors for clean routing.
+27.Attach the smallest servo horn (single-arm) — this will push the sliding mass.
+Step 5: Prepare the Sliding Mass Assembly
+28.Thread 2× M5 brass nuts onto a short piece of brass rod, or use a single 
+brass slug (~8–10 g).
+29.Drill a 1 mm hole in the mass for a short linkage wire to the servo horn.
+30.Verify the mass slides freely in the 6 mm × 30 mm rail slot in the enclosure.
+31.Attach to the servo horn tip with a small Z-bend linkage wire.
+Step 6: Install Components in Enclosure
+32.LRA: Press-fit the LRA into the floor pocket (LRA face down toward skin side). 
+Secure with a tiny drop of CA glue.
+33.LRA wiring: Route LRA wires through the floor channel up to the DRV2605L 
+pocket.
+34.Servo: Seat the SG51R servo in its cavity. The servo ears should rest on the 
+cavity ledges. Secure with M2 screws or friction fit.
+35.Sliding mass: Place the sliding mass in the rail slot. Connect the linkage to 
+the servo horn.
+36.DRV2605L: Mount the DRV2605L breakout in its pocket. Use double-sided 
+foam tape or M2 screws.
+37.XIAO: Seat the XIAO ESP32-C3 in its pocket with the USB-C port aligned to 
+the wall cutout.
+38.Battery: Place the LiPo battery in its compartment. Secure with a small strip 
+of foam tape. Do NOT compress the battery.
+39.TP4056 (optional): If using the TP4056 separately, mount it in the rear 
+pocket with USB-C port aligned to the rear wall cutout.
+40.Perfboard: Place the perfboard junction on top of the battery compartment.
+41.Wire routing: Route all wires through the floor channels. Tuck excess wire 
+neatly.
+42.Close: Snap the lid on. Verify the LRA window aligns with the LRA and the 
+status LED window aligns with the XIAO LED.
+Step 7: Flash the Firmware
+43.Connect the XIAO to your computer via USB-C.
+44.In Arduino IDE: Install ESP32 board support via Board Manager (Espressif 
+ESP32, version 3.x).
+45.Select board: XIAO_ESP32C3.
+46.Install libraries: ESP32Servo, ArduinoJson (v7), Wire (built-in).
+47.Open wrist_puck_haptic_node.ino.
+48.Edit WIFI_SSID and WIFI_PASS constants to match your 2.4 GHz network.
+49.Upload (hold BOOT button if needed during upload).
+50.Open Serial Monitor at 115200 baud to watch calibration output.
+5. Testing Checklist
+Work through each item in order. Mark pass/fail for each test. All items must pass 
+before the device is considered operational.
+Pre-Power Checks
+# Pass Test Description
+1 ☐ Visual inspection: no 
+solder bridges, no 
+exposed wire touching 
+adjacent pads
+2 ☐ Multimeter continuity: 
+GND bus connected to all 
+component grounds
+3 ☐ Multimeter continuity: no 
+short between 3.3 V and 
+GND
+4 ☐ Multimeter continuity: no 
+short between 5 V and 
+GND
+5 ☐ LiPo polarity verified 
+against XIAO BAT pad 
+markings
+6 ☐ Servo connector seated 
+correctly (Brown = GND, 
+not reversed)
+Power-On Checks
+# Pass Test Description
+7 ☐ Connect USB-C — XIAO 
+power LED illuminates
+8 ☐ Serial monitor shows boot 
+banner and pin 
+configuration
+9 ☐ I2C scan detects 
+DRV2605L at address 
+0x5A
+10 ☐ DRV2605L status register 
+reads non-0xFF value
+11 ☐ Battery voltage ADC 
+reads reasonable value 
+(3.3–4.2 V, or 0 V if no 
+# Pass Test Description
+battery connected)
+Calibration Checks
+# Pass Test Description
+12 ☐ DRV2605L auto-
+calibration completes 
+without DIAG_RESULT error
+13 ☐ LRA produces 
+audible/tactile buzz 
+during calibration “strong 
+click” test
+14 ☐ Servo sweep test 
+executes: center → left → 
+right → center (smooth 
+motion)
+15 ☐ Sliding mass moves 
+freely in rail without 
+binding
+16 ☐ No unusual sounds 
+(grinding, buzzing, 
+rattling) during servo 
+sweep
+Wi-Fi Checks
+# Pass Test Description
+17 ☐ Serial shows “Connected” 
+with valid IP address
+18 ☐ RSSI reported (should be 
+better than –70 dBm for 
+reliable operation)
+19 ☐ Ping the device IP from 
+your network — responds
+UDP Motif Checks
+# Pass Test Description
+20 ☐ Send test motif from PC: 
+echo 
+'{"id":"test","repeat":
+1,"steps":
+[{"ch":"lra","type":"ef
+fect","effect":1,"dur_m
+s":500}]}' | nc -u 
+<DEVICE_IP> 9000
+21 ☐ LRA produces a single 
+“strong click” effect
+22 ☐ Send servo test: echo 
+'{"id":"servo_test","re
+peat":1,"steps":
+[{"ch":"servo","type":"
+pos","pos_us":1000,"dur
+_ms":500},
+{"ch":"servo","type":"c
+enter","dur_ms":0}]}' | 
+nc -u <DEVICE_IP> 9000
+23 ☐ Servo moves to position 
+and returns to center
+24 ☐ Send combined dual-
+channel motif — both 
+channels respond in 
+sequence
+25 ☐ Repeat count works 
+(repeat:3 plays the 
+sequence three times)
+Safety Checks
+# Pass Test Description
+26 ☐ Idle timeout: after 5 
+seconds of no motifs, 
+servo auto-centers
+27 ☐ Watchdog: block the loop 
+(temporary test) — 
+device resets after 8 
+seconds
+# Pass Test Description
+28 ☐ Low battery: if battery < 
+3.3 V, serial warning 
+appears and motors stop
+29 ☐ Wi-Fi reconnect: 
+disconnect router, wait 
+15 s, reconnect — device 
+re-establishes connection
+Enclosure Fit Checks
+# Pass Test Description
+30 ☐ Lid snaps on and off 
+without excessive force
+31 ☐ USB-C cable plugs in 
+through the port cutout 
+(both XIAO and TP4056 if 
+used)
+32 ☐ LRA vibration is clearly 
+felt through the lid LRA 
+window
+33 ☐ No component rattling 
+when shaking the 
+assembled puck
+34 ☐ Wrist strap threads 
+through both strap slots 
+and secures comfortably
+35 ☐ Overall weight < 70 g 
+(target ~55 g)
+6. JSON Motif Schema Reference
+The Wrist-Puck accepts haptic motifs as JSON payloads sent via UDP on port 9000. 
+Each motif is a self-contained sequence of channel actions.
+Base Schema
+{   "id": "motif_name",   "repeat": 1,   "steps": [     {       "ch": "lra", 
+"type": "effect",       "effect": 47,       "dur_ms": 200     }   ] }
+Top-Level Fields
+Field Type Range Description
+id string — Human-readable 
+name for the motif
+repeat int 1–10 Number of times 
+to play the full 
+sequence
+steps array — Ordered list of 
+channel actions
+Step Fields — LRA Channel ("ch": "lra")
+Type Value Additional Fields Description
+"effect" "effect": 1–123 Play a DRV2605L library 
+effect. See TI DRV2605L 
+datasheet Table 11.2 for 
+the full waveform library.
+"rtp" "amplitude": 0–255 Real-Time Playback 
+mode. Continuous 
+vibration at specified 
+intensity.
+"stop" — Stop LRA output 
+immediately.
+Step Fields — Servo Channel ("ch": "servo")
+Type Value Additional Fields Description
+"pos" "pos_us": 750–2250 Move to position specified 
+in microseconds pulse 
+width.
+"center" — Return to center position 
+(1500 μs).
+"sweep" — Execute a full left–right–
+center sweep test.
+Common Step Field
+Field Type Range Description
+dur_ms int 0–5000 Dwell time in 
+milliseconds after 
+executing this 
+step before the 
+next step begins.
+Example Motifs
+Motif 1 — “Rough Surface Bump”
+{   "id": "rough_bump",   "repeat": 1,   "steps": [     {"ch": "lra",   
+"type": "effect", "effect": 47, "dur_ms": 100},     {"ch": "servo", "type": 
+"pos",    "pos_us": 1100, "dur_ms": 150},     {"ch": "lra",   "type": 
+"effect", "effect": 52, "dur_ms": 80},     {"ch": "servo", "type": "center", 
+"dur_ms": 0}   ] }
+Motif 2 — “Weight Shift Left”
+{   "id": "weight_left",   "repeat": 1,   "steps": [     {"ch": "servo", 
+"type": "pos",  "pos_us": 800,   "dur_ms": 400},     {"ch": "lra",   "type": 
+"rtp",  "amplitude": 60, "dur_ms": 300},     {"ch": "lra",   "type": "stop", 
+"dur_ms": 0},     {"ch": "servo", "type": "center", "dur_ms": 0}   ] }
+Motif 3 — “Heartbeat”
+{   "id": "heartbeat",   "repeat": 3,   "steps": [     {"ch": "lra",   
+"type": "effect", "effect": 1, "dur_ms": 120},     {"ch": "lra",   "type": 
+"effect", "effect": 1, "dur_ms": 300},     {"ch": "servo", "type": "pos",    
+"pos_us": 1350, "dur_ms": 100},     {"ch": "servo", "type": "center", 
+"dur_ms": 400}   ] }
+7. Troubleshooting
+# Problem Likely Cause Solution
+1 DRV2605L not 
+found on I2C
+SDA/SCL wires 
+swapped, missing 
+power, or missing 
+pull-up resistors
+Check SDA/SCL 
+wiring matches pin 
+table. Verify 3.3 V 
+power to breakout. 
+Add external 4.7 
+kΩ pull-ups if 
+board lacks them. 
+Try 
+Wire.begin(SDA_PI
+N, SCL_PIN) with 
+# Problem Likely Cause Solution
+explicit pins.
+2 LRA doesn’t 
+vibrate
+Wrong polarity on 
+OUT pads, auto-cal 
+failure, or LRA not 
+making contact
+Verify LRA wires 
+on OUT+/OUT–. 
+Check auto-cal 
+passed in serial 
+output. Try 
+manual RTP mode: 
+set amplitude to 
+200 and listen for 
+vibration.
+3 Servo jitters or 
+doesn’t move
+Insufficient 
+voltage, wrong 
+PWM pin, or 
+electrical noise
+Verify 5 V power 
+(servo needs 4.8 
+V+). Confirm PWM 
+pin assignment in 
+firmware. Try a 
+different GPIO. 
+Add a 100 μF 
+capacitor across 
+servo VCC/GND.
+4 Wi-Fi won’t 
+connect
+Wrong credentials, 
+5 GHz network, or 
+antenna issue
+Double-check SSID 
+and password 
+(case-sensitive). 
+Verify the network 
+is 2.4 GHz — 
+ESP32-C3 does not 
+support 5 GHz. 
+Check onboard 
+antenna is not 
+obstructed by 
+wiring.
+5 Battery reads 0 
+V
+Voltage divider 
+wiring error, 
+wrong ADC pin, or 
+cold solder joint
+Measure the 
+divider midpoint 
+with a multimeter 
+(should read ~half 
+of VBAT). Verify 
+ADC pin matches 
+firmware config. 
+Re-solder joints.
+6 Watchdog resets 
+loop
+A motif sequence 
+total duration 
+exceeds 8 seconds
+Reduce step count 
+or individual 
+dur_ms values. 
+Break long motifs 
+into multiple 
+shorter motifs with 
+repeat.
+7 Enclosure too Printer Increase cavity 
+# Problem Likely Cause Solution
+tight dimensional 
+accuracy or 
+warping
+dimensions by 0.5 
+mm in OpenSCAD 
+parameters 
+(CLEARANCE 
+variable). Re-slice 
+and re-print. Sand 
+edges lightly if 
+minor.
+8 LRA too quiet 
+through lid
+Lid membrane too 
+thick or LRA not 
+seated against 
+skin side
+Enlarge the LRA 
+window opening in 
+OpenSCAD. 
+Reduce LID_T to 
+1.0 mm. Ensure 
+LRA is press-fit 
+firmly into the 
+floor pocket.
+8. Future Enhancements
+The following features are planned or under consideration for future revisions of the 
+Wrist-Puck platform:
+# Enhancement Description
+1 BLE MIDI Support Add BLE MIDI input for 
+musical haptic 
+performances — map 
+MIDI note-on/off events to 
+LRA effects and servo 
+positions in real time.
+2 Multi-Node Mesh 
+Networking
+Implement ESP-NOW 
+peer-to-peer mesh for a 
+full-body haptic suit. 
+Synchronize motif 
+playback across wrist, 
+chest, and ankle nodes 
+with sub-10 ms latency.
+3 IMU Integration Add an MPU-6050 6-axis 
+IMU for motion-reactive 
+haptics. Enable gesture-
+triggered feedback and 
+orientation-aware weight-
+# Enhancement Description
+shift patterns.
+4 Custom PCB Design a purpose-built 
+PCB to replace the 
+perfboard junction. 
+Integrate the DRV2605L, 
+voltage divider, servo 
+header, and LiPo 
+connector on a single 25 
+mm circular board.
+5 OTA Firmware Updates Implement over-the-air 
+updates via the 
+ArduinoOTA library. 
+Eliminates the need to 
+open the enclosure for 
+firmware changes.
+6 Web-Based Motif 
+Designer
+Host a local web UI on 
+the ESP32-C3 (AP mode 
++ HTTP server). Provide a 
+drag-and-drop timeline 
+editor for composing and 
+testing motif sequences 
+directly from a browser.
+Wrist-Puck Dual-Channel Haptic Node — Complete Build Guide  |  Rev 1.0  |  May 
+2026  |  Sean (Whitehorse, YT)
+This document is provided as-is for personal and educational use.

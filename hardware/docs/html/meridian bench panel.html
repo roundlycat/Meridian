@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Meridian — Bench Panel</title>
+<style>
+  :root{
+    --chassis:#17181A;
+    --panel:#1F2124;
+    --panel-2:#242629;
+    --line:#33363B;
+    --amber:#E8A33D;
+    --amber-dim:#9A6F2E;
+    --bone:#D8D4CB;
+    --dim:#8B8880;
+    --block:#B05A4A;
+    --ok:#8FA872;
+    --mono:ui-monospace,'SF Mono','Cascadia Mono','JetBrains Mono',Menlo,Consolas,monospace;
+    --body:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{background:var(--chassis);color:var(--bone);font-family:var(--body);font-size:14px;line-height:1.5}
+  body{padding:14px 14px 40px;max-width:560px;margin:0 auto}
+
+  /* header */
+  header{border:1px solid var(--line);border-radius:6px;background:var(--panel);padding:14px 16px 12px;position:relative;overflow:hidden}
+  .hdr-top{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap}
+  h1{font-family:var(--mono);font-size:15px;font-weight:600;letter-spacing:.22em;color:var(--bone)}
+  h1 .m{color:var(--amber)}
+  .hdr-date{font-family:var(--mono);font-size:11px;color:var(--dim);letter-spacing:.06em}
+  .trace{height:22px;margin-top:8px}
+  .trace svg{width:100%;height:100%;display:block}
+  .trace path{fill:none;stroke:var(--amber);stroke-width:1.5;opacity:.85}
+  @media (prefers-reduced-motion:no-preference){
+    .trace path{stroke-dasharray:900;stroke-dashoffset:900;animation:trace 2.4s ease-out forwards}
+    @keyframes trace{to{stroke-dashoffset:0}}
+  }
+  .hdr-sub{font-size:12px;color:var(--dim);margin-top:6px}
+
+  /* section shells */
+  section{border:1px solid var(--line);border-radius:6px;background:var(--panel);margin-top:12px;overflow:hidden}
+  .sec-label{display:flex;align-items:center;justify-content:space-between;padding:9px 14px;border-bottom:1px solid var(--line);background:var(--panel-2)}
+  .sec-label span.t{font-family:var(--mono);font-size:10.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--dim)}
+  .sec-label span.badge{font-family:var(--mono);font-size:10px;letter-spacing:.1em;color:var(--amber)}
+  .sec-body{padding:12px 14px}
+
+  /* prediction ledger */
+  .ledger-note{font-size:12px;color:var(--dim);margin-bottom:12px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+  .fld label{display:block;font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin-bottom:4px}
+  .fld input,.fld select{width:100%;background:var(--chassis);border:1px solid var(--line);border-radius:4px;color:var(--amber);font-family:var(--mono);font-size:15px;padding:7px 9px}
+  .fld input:focus,.fld select:focus,button:focus-visible,.check:focus-visible{outline:2px solid var(--amber);outline-offset:1px}
+  .fld input:disabled,.fld select:disabled{color:var(--amber-dim);border-color:var(--panel-2)}
+  .readout{margin-top:12px;border:1px dashed var(--line);border-radius:4px;padding:10px 12px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+  .readout .r{font-family:var(--mono)}
+  .readout .r b{display:block;font-size:10px;letter-spacing:.14em;color:var(--dim);font-weight:400;text-transform:uppercase}
+  .readout .r span{font-size:16px;color:var(--amber)}
+  .readout .r span.na{color:var(--dim)}
+  .commit-row{margin-top:12px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  button{font-family:var(--mono);font-size:12px;letter-spacing:.08em;background:var(--amber);color:#1a1408;border:none;border-radius:4px;padding:8px 14px;cursor:pointer}
+  button.ghost{background:transparent;color:var(--dim);border:1px solid var(--line)}
+  button:disabled{background:var(--panel-2);color:var(--dim);cursor:default}
+  .committed{font-family:var(--mono);font-size:11px;color:var(--ok);letter-spacing:.06em}
+  .divergence{font-family:var(--mono);font-size:12px;margin-top:10px;color:var(--bone)}
+  .divergence em{color:var(--amber);font-style:normal}
+
+  /* checklists */
+  ul.check-list{list-style:none}
+  ul.check-list li{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-bottom:1px solid var(--panel-2)}
+  ul.check-list li:last-child{border-bottom:none}
+  .check{flex:0 0 auto;width:16px;height:16px;margin-top:2px;border:1px solid var(--dim);border-radius:3px;background:var(--chassis);cursor:pointer;position:relative}
+  .check[aria-checked="true"]{border-color:var(--amber);background:var(--amber)}
+  .check[aria-checked="true"]::after{content:"";position:absolute;inset:3px;background:#1a1408;clip-path:polygon(14% 46%,38% 70%,86% 16%,98% 28%,38% 92%,2% 58%)}
+  li .txt{font-size:13.5px;color:var(--bone)}
+  li[data-done="1"] .txt{color:var(--dim);text-decoration:line-through;text-decoration-color:var(--amber-dim)}
+  li .sub{display:block;font-size:11.5px;color:var(--dim)}
+
+  /* week rows */
+  .week-row{display:flex;gap:12px;padding:8px 0;border-bottom:1px solid var(--panel-2);align-items:baseline}
+  .week-row:last-child{border-bottom:none}
+  .week-when{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--amber);flex:0 0 74px}
+  .week-what{font-size:13.5px}
+  .week-what .sub{display:block;font-size:11.5px;color:var(--dim)}
+
+  /* blocked */
+  .blocked-item{display:flex;gap:10px;align-items:flex-start;padding:8px 0}
+  .mark{flex:0 0 auto;font-family:var(--mono);font-size:10px;letter-spacing:.12em;border:1px solid var(--block);color:var(--block);border-radius:3px;padding:2px 6px;margin-top:1px}
+  .blocked-item .txt{font-size:13px}
+  .blocked-item .sub{display:block;font-size:11.5px;color:var(--dim)}
+
+  /* notes */
+  textarea{width:100%;min-height:84px;background:var(--chassis);border:1px solid var(--line);border-radius:4px;color:var(--bone);font-family:var(--mono);font-size:13px;padding:9px 10px;resize:vertical}
+
+  footer{margin-top:14px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+  .save-state{font-family:var(--mono);font-size:10.5px;color:var(--dim);letter-spacing:.08em}
+  .epigraph{margin-top:18px;font-family:Georgia,'Times New Roman',serif;font-style:italic;font-size:12.5px;color:var(--dim);text-align:center}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="hdr-top">
+    <h1><span class="m">MERIDIAN</span>&nbsp;·&nbsp;BENCH&nbsp;PANEL</h1>
+    <div class="hdr-date" id="today"></div>
+  </div>
+  <div class="trace" aria-hidden="true">
+    <svg viewBox="0 0 520 22" preserveAspectRatio="none">
+      <path d="M0 11 H120 L128 3 L136 19 L144 11 H250 L258 6 L266 16 L274 11 H400 L406 8 L412 14 L418 11 H520"/>
+    </svg>
+  </div>
+  <div class="hdr-sub">Firmware + battery today · 2AFC session 3 midweek · one piece of writing out by Friday. Mux stays in customs; nothing here needs it.</div>
+</header>
+
+<!-- PREDICTION LEDGER -->
+<section>
+  <div class="sec-label"><span class="t">Prediction ledger — battery drain test</span><span class="badge" id="ledger-badge">OPEN</span></div>
+  <div class="sec-body">
+    <div class="ledger-note">Commit the prediction first. Measured fields unlock only after the prediction is locked — reality arbitrates, in that order.</div>
+    <div class="grid2">
+      <div class="fld">
+        <label for="pack">Pack</label>
+        <select id="pack">
+          <option value="2000">2000 mAh</option>
+          <option value="3000">3000 mAh</option>
+          <option value="500">500 mAh (small)</option>
+        </select>
+      </div>
+      <div class="fld">
+        <label for="pred-draw">Predicted avg draw (mA)</label>
+        <input id="pred-draw" type="number" inputmode="decimal" placeholder="e.g. 45">
+      </div>
+      <div class="fld">
+        <label for="pred-runtime">Predicted runtime (h)</label>
+        <input id="pred-runtime" type="number" inputmode="decimal" placeholder="your number">
+      </div>
+      <div class="fld">
+        <label>Arithmetic check (h)</label>
+        <input id="arith" type="text" disabled value="—" aria-label="Arithmetic check: pack capacity times 0.85 divided by predicted draw">
+      </div>
+    </div>
+
+    <div class="commit-row">
+      <button id="commit-btn">Commit prediction</button>
+      <span class="committed" id="commit-stamp"></span>
+    </div>
+
+    <div class="grid2" style="margin-top:12px">
+      <div class="fld">
+        <label for="meas-draw">Measured avg draw (mA)</label>
+        <input id="meas-draw" type="number" inputmode="decimal" disabled placeholder="locked">
+      </div>
+      <div class="fld">
+        <label for="meas-runtime">Actual runtime (h)</label>
+        <input id="meas-runtime" type="number" inputmode="decimal" disabled placeholder="locked">
+      </div>
+    </div>
+
+    <div class="readout">
+      <div class="r"><b>Draw Δ</b><span id="d-draw" class="na">—</span></div>
+      <div class="r"><b>Runtime Δ</b><span id="d-run" class="na">—</span></div>
+      <div class="r"><b>Verdict</b><span id="verdict" class="na">awaiting data</span></div>
+    </div>
+    <div class="divergence" id="div-note"></div>
+  </div>
+</section>
+
+<!-- BATTERY TEST CHECKLIST -->
+<section>
+  <div class="sec-label"><span class="t">Drain test — procedure</span><span class="badge" id="drain-count"></span></div>
+  <div class="sec-body">
+    <ul class="check-list" id="drain-list"></ul>
+  </div>
+</section>
+
+<!-- TODAY / SINGLE-POD BENCH -->
+<section>
+  <div class="sec-label"><span class="t">Single-pod bench (no mux required)</span><span class="badge" id="bench-count"></span></div>
+  <div class="sec-body">
+    <ul class="check-list" id="bench-list"></ul>
+  </div>
+</section>
+
+<!-- WEEK SHAPE -->
+<section>
+  <div class="sec-label"><span class="t">Shape of the week</span></div>
+  <div class="sec-body" id="week-body"></div>
+</section>
+
+<!-- BLOCKED — MARKED, NOT ABSENT -->
+<section>
+  <div class="sec-label"><span class="t">Blocked — marked, not absent</span></div>
+  <div class="sec-body" id="blocked-body"></div>
+</section>
+
+<!-- BENCH LOG -->
+<section>
+  <div class="sec-label"><span class="t">Bench log</span></div>
+  <div class="sec-body">
+    <textarea id="notes" placeholder="Observations, divergences, anything the next session should inherit…"></textarea>
+  </div>
+</section>
+
+<footer>
+  <span class="save-state" id="save-state">loading…</span>
+  <button class="ghost" id="reset-btn">Reset panel</button>
+</footer>
+
+<div class="epigraph">"The long, long path was one path."</div>
+
+<script>
+(function(){
+  const KEY='meridian-bench-panel-v1';
+
+  const drainItems=[
+    {id:'d1',t:'Verify pack voltage before start',s:'3.7–4.2 V expected on a healthy LiPo'},
+    {id:'d2',t:'Current path through 10 A jack, dial at A⎓',s:'burden voltage on mA ranges browns out the C3 — learned the hard way'},
+    {id:'d3',t:'Flash autocycle sketch, confirm state buzzes',s:'wrist_puck_power_autocycle — N clicks per state'},
+    {id:'d4',t:'USB disconnected during the run',s:'no parallel power path'},
+    {id:'d5',t:'Note start time and starting voltage'},
+    {id:'d6',t:'Spot-read draw at 15 min and 1 h',s:'compare against committed prediction'},
+    {id:'d7',t:'Record cutoff time when boost drops out'},
+    {id:'d8',t:'Enter measured values in the ledger above'}
+  ];
+
+  const benchItems=[
+    {id:'b1',t:'DRV2605L auto-calibration on single pod',s:'confirm LRA resonance detected near 175 Hz'},
+    {id:'b2',t:'Confirm 0x5A on the bus, direct-wired',s:'SDA=GPIO6, SCL=GPIO7 — remember the generic boards swap SCL/SDA order'},
+    {id:'b3',t:'Write selectChannel(n) mux wrapper',s:'stub the TCA9548A in software; arrival becomes a wiring day'},
+    {id:'b4',t:'Pod abstraction that iterates channels',s:'test array logic against one physical pod'},
+    {id:'b5',t:'Draft Session 3 prediction before running',s:'same pair, acoustic condition controlled from trial 1 — write the expected accuracy curve down first'}
+  ];
+
+  const week=[
+    {when:'Today',what:'Battery characterization + mux firmware scaffold',sub:'prediction committed before the meter moves'},
+    {when:'Midweek',what:'2AFC Session 3 — the adaptation cliff',sub:'does rest or rotation prevent the collapse? Prediction first.'},
+    {when:'By Fri',what:'One piece of writing out the door',sub:'Thermometer essay extraction, or Meridian proposal repo + Pages'},
+    {when:'Ongoing',what:'Reading',sub:'Hunter in progress · Trouillot advancing · Buck-Morss next in line'}
+  ];
+
+  const blocked=[
+    {t:'TCA9548A multiplexer ×2',s:'Adafruit order in customs; second source not yet shipping. Blocks multi-pod assembly only.'},
+    {t:'ESP32-S31 modules',s:'Mass production announced; waiting for regular channels — $35 single-unit shipping is silly.'}
+  ];
+
+  let state={
+    pack:'2000',predDraw:'',predRuntime:'',committed:false,commitStamp:'',
+    measDraw:'',measRuntime:'',checks:{},notes:''
+  };
+
+  const $=id=>document.getElementById(id);
+
+  function renderList(items,mount,countEl){
+    const ul=$(mount);ul.innerHTML='';
+    let done=0;
+    items.forEach(it=>{
+      const li=document.createElement('li');
+      const on=!!state.checks[it.id];
+      if(on)done++;
+      li.dataset.done=on?'1':'0';
+      const cb=document.createElement('div');
+      cb.className='check';cb.setAttribute('role','checkbox');
+      cb.setAttribute('tabindex','0');cb.setAttribute('aria-checked',on?'true':'false');
+      cb.setAttribute('aria-label',it.t);
+      const toggle=()=>{state.checks[it.id]=!state.checks[it.id];save();renderAll();};
+      cb.addEventListener('click',toggle);
+      cb.addEventListener('keydown',e=>{if(e.key===' '||e.key==='Enter'){e.preventDefault();toggle();}});
+      const tx=document.createElement('div');tx.className='txt';
+      tx.textContent=it.t;
+      if(it.s){const s=document.createElement('span');s.className='sub';s.textContent=it.s;tx.appendChild(s);}
+      li.appendChild(cb);li.appendChild(tx);ul.appendChild(li);
+    });
+    $(countEl).textContent=done+' / '+items.length;
+  }
+
+  function renderStatic(){
+    const wb=$('week-body');wb.innerHTML='';
+    week.forEach(w=>{
+      const row=document.createElement('div');row.className='week-row';
+      row.innerHTML='<div class="week-when"></div><div class="week-what"><span class="main"></span><span class="sub"></span></div>';
+      row.querySelector('.week-when').textContent=w.when;
+      row.querySelector('.main').textContent=w.what;
+      row.querySelector('.sub').textContent=w.sub;
+      wb.appendChild(row);
+    });
+    const bb=$('blocked-body');bb.innerHTML='';
+    blocked.forEach(b=>{
+      const d=document.createElement('div');d.className='blocked-item';
+      d.innerHTML='<span class="mark">WITHHELD</span><div class="txt"><span class="main"></span><span class="sub"></span></div>';
+      d.querySelector('.main').textContent=b.t;
+      d.querySelector('.sub').textContent=b.s;
+      bb.appendChild(d);
+    });
+  }
+
+  function fmtPct(x){return (x>0?'+':'')+x.toFixed(1)+'%';}
+
+  function renderLedger(){
+    $('pack').value=state.pack;
+    $('pred-draw').value=state.predDraw;
+    $('pred-runtime').value=state.predRuntime;
+    $('meas-draw').value=state.measDraw;
+    $('meas-runtime').value=state.measRuntime;
+
+    const locked=state.committed;
+    $('pack').disabled=locked;
+    $('pred-draw').disabled=locked;
+    $('pred-runtime').disabled=locked;
+    $('meas-draw').disabled=!locked;
+    $('meas-runtime').disabled=!locked;
+    $('meas-draw').placeholder=locked?'enter reading':'locked';
+    $('meas-runtime').placeholder=locked?'enter hours':'locked';
+    $('commit-btn').disabled=locked;
+    $('commit-btn').textContent=locked?'Prediction locked':'Commit prediction';
+    $('ledger-badge').textContent=locked?'LOCKED':'OPEN';
+    $('commit-stamp').textContent=locked?('committed '+state.commitStamp):'';
+
+    const pd=parseFloat(state.predDraw);
+    const cap=parseFloat(state.pack);
+    $('arith').value=(pd>0)?((cap*0.85/pd).toFixed(1)+' h @ 85% usable'):'—';
+
+    const md=parseFloat(state.measDraw), pr=parseFloat(state.predRuntime), mr=parseFloat(state.measRuntime);
+    const dDraw=(pd>0&&md>0)?((md-pd)/pd*100):null;
+    const dRun=(pr>0&&mr>0)?((mr-pr)/pr*100):null;
+    const set=(id,v)=>{const el=$(id);if(v===null){el.textContent='—';el.className='na';}else{el.textContent=fmtPct(v);el.className='';}};
+    set('d-draw',dDraw);set('d-run',dRun);
+    const v=$('verdict');
+    if(dRun===null&&dDraw===null){v.textContent='awaiting data';v.className='na';}
+    else{
+      const worst=Math.max(Math.abs(dDraw??0),Math.abs(dRun??0));
+      v.className='';
+      v.textContent=worst<=10?'model holds':worst<=25?'close — note why':'divergence: investigate';
+    }
+    $('div-note').innerHTML=(dRun!==null&&Math.abs(dRun)>25)
+      ?'A gap this size is the interesting result — <em>write down the candidate explanations before touching anything.</em>':'';
+  }
+
+  function renderAll(){
+    renderList(drainItems,'drain-list','drain-count');
+    renderList(benchItems,'bench-list','bench-count');
+    renderLedger();
+    $('notes').value=state.notes;
+  }
+
+  let saveTimer=null;
+  function save(){
+    clearTimeout(saveTimer);
+    saveTimer=setTimeout(async()=>{
+      try{
+        const r=await window.storage.set(KEY,JSON.stringify(state));
+        $('save-state').textContent=r?('saved '+new Date().toLocaleTimeString()):'save failed';
+      }catch(e){$('save-state').textContent='save unavailable (session only)';}
+    },400);
+  }
+
+  async function load(){
+    try{
+      const r=await window.storage.get(KEY);
+      if(r&&r.value){state=Object.assign(state,JSON.parse(r.value));}
+      $('save-state').textContent='state restored';
+    }catch(e){$('save-state').textContent='fresh session';}
+    renderAll();
+  }
+
+  // wiring
+  ['pack','pred-draw','pred-runtime','meas-draw','meas-runtime'].forEach(id=>{
+    $(id).addEventListener('input',()=>{
+      state.pack=$('pack').value;
+      state.predDraw=$('pred-draw').value;
+      state.predRuntime=$('pred-runtime').value;
+      state.measDraw=$('meas-draw').value;
+      state.measRuntime=$('meas-runtime').value;
+      save();renderLedger();
+    });
+  });
+
+  $('commit-btn').addEventListener('click',()=>{
+    if(!state.predDraw||!state.predRuntime){
+      $('commit-stamp').textContent='enter both predictions first';
+      return;
+    }
+    state.committed=true;
+    state.commitStamp=new Date().toLocaleString();
+    save();renderLedger();
+  });
+
+  $('notes').addEventListener('input',()=>{state.notes=$('notes').value;save();});
+
+  $('reset-btn').addEventListener('click',async()=>{
+    if(!confirm('Clear the panel? Committed predictions and checks will be erased.'))return;
+    state={pack:'2000',predDraw:'',predRuntime:'',committed:false,commitStamp:'',measDraw:'',measRuntime:'',checks:{},notes:''};
+    try{await window.storage.set(KEY,JSON.stringify(state));}catch(e){}
+    renderAll();
+  });
+
+  $('today').textContent=new Date().toLocaleDateString(undefined,{weekday:'long',year:'numeric',month:'long',day:'numeric'});
+  renderStatic();
+  load();
+})();
+</script>
+</body>
+</html>

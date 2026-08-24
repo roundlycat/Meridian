@@ -1,0 +1,815 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Relational Autonomous Agent — Architecture</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;600&family=IBM+Plex+Sans:wght@300;400;600&display=swap');
+
+  :root {
+    --bg:       #0a0c0f;
+    --surface:  #111418;
+    --border:   #1e2530;
+    --dim:      #1a2030;
+
+    --built:    #00e5a0;
+    --planned:  #4a7fff;
+    --partial:  #f0a020;
+
+    --env:      #20c068;
+    --embodied: #e07030;
+    --relat:    #5090f0;
+    --hbw:      #c050d0;
+    --db:       #30b8c0;
+    --unity:    #9060e0;
+    --relay:    #e0c030;
+
+    --text:     #d0d8e8;
+    --muted:    #5a6a80;
+    --label:    #8090a8;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'IBM Plex Sans', monospace;
+    min-height: 100vh;
+    padding: 32px;
+  }
+
+  h1 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 300;
+    font-size: 13px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+
+  .title-main {
+    font-family: 'IBM Plex Mono', monospace;
+    font-weight: 600;
+    font-size: 22px;
+    letter-spacing: 0.05em;
+    color: var(--text);
+    margin-bottom: 32px;
+  }
+
+  .diagram-wrap {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
+    grid-template-rows: auto auto auto;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  /* ---- LAYER COLUMN HEADERS ---- */
+  .col-header {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-align: center;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 4px;
+  }
+
+  /* ---- CARDS ---- */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 14px 12px;
+    position: relative;
+    transition: border-color 0.2s;
+  }
+
+  .card:hover { border-color: #2e3a50; }
+
+  .card.built   { border-left: 3px solid var(--built); }
+  .card.planned { border-left: 3px solid var(--planned); opacity: 0.7; }
+  .card.partial { border-left: 3px solid var(--partial); }
+
+  .card-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .card-file {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    color: var(--muted);
+    margin-bottom: 8px;
+    word-break: break-all;
+  }
+
+  .card-desc {
+    font-size: 11px;
+    color: var(--label);
+    line-height: 1.55;
+  }
+
+  .tag {
+    display: inline-block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 8px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 2px 6px;
+    border-radius: 3px;
+    margin-top: 8px;
+    margin-right: 4px;
+  }
+
+  .tag-built   { background: rgba(0,229,160,0.12); color: var(--built); }
+  .tag-planned { background: rgba(74,127,255,0.12); color: var(--planned); }
+  .tag-partial { background: rgba(240,160,32,0.12); color: var(--partial); }
+
+  /* domain colour accents on titles */
+  .c-env      { color: var(--env); }
+  .c-embodied { color: var(--embodied); }
+  .c-relat    { color: var(--relat); }
+  .c-hbw      { color: var(--hbw); }
+  .c-db       { color: var(--db); }
+  .c-unity    { color: var(--unity); }
+  .c-relay    { color: var(--relay); }
+
+  /* ---- FLOW ARROWS SECTION ---- */
+  .flow {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0;
+    padding: 12px 0;
+  }
+
+  .flow-node {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 6px 12px;
+    border-radius: 4px;
+    white-space: nowrap;
+  }
+
+  .flow-arrow {
+    font-size: 14px;
+    color: var(--muted);
+    padding: 0 6px;
+    flex-shrink: 0;
+  }
+
+  /* ---- DATA FLOW DIAGRAM (SVG) ---- */
+  .svg-wrap {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px;
+    margin-bottom: 24px;
+    overflow-x: auto;
+  }
+
+  svg text { font-family: 'IBM Plex Mono', monospace; }
+
+  /* ---- LEGEND ---- */
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+  }
+
+  .legend-section { min-width: 180px; }
+
+  .legend-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 7px;
+    font-size: 11px;
+    color: var(--label);
+  }
+
+  .legend-dot {
+    width: 10px; height: 10px;
+    border-radius: 2px;
+    flex-shrink: 0;
+  }
+
+  .legend-line {
+    width: 24px; height: 2px;
+    flex-shrink: 0;
+  }
+
+  /* ---- DETAIL TABLE ---- */
+  .detail-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+    margin-bottom: 32px;
+  }
+
+  .detail-table th {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    text-align: left;
+    padding: 8px 12px;
+    border-bottom: 1px solid var(--border);
+    font-weight: 400;
+  }
+
+  .detail-table td {
+    padding: 9px 12px;
+    border-bottom: 1px solid var(--dim);
+    color: var(--label);
+    vertical-align: top;
+  }
+
+  .detail-table tr:hover td { background: rgba(255,255,255,0.015); }
+
+  .detail-table td:first-child {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--text);
+    white-space: nowrap;
+  }
+
+  .status-dot {
+    display: inline-block;
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    margin-right: 6px;
+    vertical-align: middle;
+  }
+
+  .section-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 28px 0 12px;
+  }
+
+  /* grid spanning helpers */
+  .span2 { grid-column: span 2; }
+  .span3 { grid-column: span 3; }
+  .span5 { grid-column: span 5; }
+
+  /* ---- MAIN SVG ARCHITECTURE DIAGRAM ---- */
+  .arch-svg { display: block; margin: 0 auto; }
+</style>
+</head>
+<body>
+
+<h1>System Architecture</h1>
+<div class="title-main">Relational Autonomous Agent Stack</div>
+
+<!-- ============================================================
+     LAYER OVERVIEW CARDS
+     ============================================================ -->
+
+<div class="section-label">Layers</div>
+<div class="diagram-wrap">
+
+  <!-- ROW 0: column headers -->
+  <div class="col-header">Hardware</div>
+  <div class="col-header">Ingestion</div>
+  <div class="col-header">Storage</div>
+  <div class="col-header">Relay</div>
+  <div class="col-header">Presentation</div>
+
+  <!-- ROW 1: main layer cards -->
+
+  <!-- HARDWARE -->
+  <div class="card built">
+    <div class="card-title c-env">Sensor Spine v1.0</div>
+    <div class="card-file">Pi 5 / I²C / SPI / ADC</div>
+    <div class="card-desc">
+      BME688 · SHT35<br>
+      ICM-42688-P · INA219<br>
+      Piezo · VCNL4040<br>
+      <em style="color:var(--planned)">Camera · Thermal ▸ planned</em>
+    </div>
+    <span class="tag tag-built">Built</span>
+    <span class="tag tag-planned">HBW planned</span>
+  </div>
+
+  <!-- INGESTION -->
+  <div class="card built">
+    <div class="card-title c-embodied">Sensor Ingestion</div>
+    <div class="card-file">sensor_ingestion_layer.py</div>
+    <div class="card-desc">
+      Per-domain async pollers.<br>
+      Rolling baseline + threshold detection.<br>
+      AgentStateProvider (shared vitals).<br>
+      Supervised restart on crash.
+    </div>
+    <span class="tag tag-built">Built</span>
+    <span class="tag tag-planned">HBW poller planned</span>
+  </div>
+
+  <!-- STORAGE -->
+  <div class="card built">
+    <div class="card-title c-db">PostgreSQL + pgvector</div>
+    <div class="card-file">perceptual_schema_extension.sql</div>
+    <div class="card-desc">
+      sensor_readings<br>
+      perceptual_events (vec 768)<br>
+      motif_resonance<br>
+      agent_nodes<br>
+      perceptual_motif_drift<br>
+      relational_contact_events
+    </div>
+    <span class="tag tag-built">Live @ 768 dims</span>
+  </div>
+
+  <!-- RELAY -->
+  <div class="card built">
+    <div class="card-title c-relay">Relay API</div>
+    <div class="card-file">relay_api.py · port 8765</div>
+    <div class="card-desc">
+      GET /api/events (poll)<br>
+      GET /api/events/stream (SSE)<br>
+      GET /api/agent/{id}/vitals<br>
+      GET /api/motifs/{id}/echoes
+    </div>
+    <span class="tag tag-built">Live</span>
+  </div>
+
+  <!-- UNITY -->
+  <div class="card built">
+    <div class="card-title c-unity">Unity AR</div>
+    <div class="card-file">AgentPerception/ (C#)</div>
+    <div class="card-desc">
+      PerceptualModels<br>
+      PerceptualEventClient<br>
+      PerceptualEventBus<br>
+      AgentPerceptionVisualizer<br>
+      MotifResonanceRenderer
+      <em style="color:var(--planned)"><br>MotifGraphScene ▸ planned</em>
+    </div>
+    <span class="tag tag-built">Built</span>
+    <span class="tag tag-planned">Graph planned</span>
+  </div>
+
+  <!-- ROW 2: cross-cutting concerns -->
+
+  <div class="card built span2">
+    <div class="card-title c-embodied">Embedding Pipeline</div>
+    <div class="card-file">perceptual_embedding_pipeline.py</div>
+    <div class="card-desc">
+      FeaturePacker serialises sensor events as structured natural language before embedding — preserving semantic alignment with the linguistic motif space.<br>
+      Embedder → Ollama / nomic-embed-text (768 dims, local, stable).<br>
+      MotifResonanceClassifier → HNSW nearest-neighbour query → recurrence / candidate / weak_echo classification.
+    </div>
+    <span class="tag tag-built">Live · Ollama</span>
+  </div>
+
+  <div class="card built">
+    <div class="card-title c-db">Motif Space</div>
+    <div class="card-file">motifs table (stub → ecology)</div>
+    <div class="card-desc">
+      Shared embedding space for linguistic motifs (from 18-month conversation corpus) and physical perceptual events. Cross-domain convergence is the primary empirical signal.
+    </div>
+    <span class="tag tag-partial">Stub live</span>
+    <span class="tag tag-planned">Ecology pending</span>
+  </div>
+
+  <div class="card planned span2">
+    <div class="card-title c-relat">Planned: Drift + Comms</div>
+    <div class="card-file">— not yet written —</div>
+    <div class="card-desc">
+      Perceptual motif drift updater: recomputes centroids as events accrete → writes perceptual_motif_drift.<br>
+      Thermal communication protocol: CPU load modulation as inter-agent metabolic signal.<br>
+      Motif graph Unity scene component.
+    </div>
+    <span class="tag tag-planned">Planned</span>
+  </div>
+
+</div>
+
+<!-- ============================================================
+     DATA FLOW SVG
+     ============================================================ -->
+
+<div class="section-label">Data Flow</div>
+<div class="svg-wrap">
+<svg class="arch-svg" width="900" height="420" viewBox="0 0 900 420">
+  <defs>
+    <marker id="arr" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+      <polygon points="0 0, 7 3.5, 0 7" fill="#3a4a60"/>
+    </marker>
+    <marker id="arr-built" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+      <polygon points="0 0, 7 3.5, 0 7" fill="#00e5a0"/>
+    </marker>
+    <marker id="arr-planned" markerWidth="7" markerHeight="7" refX="6" refY="3.5" orient="auto">
+      <polygon points="0 0, 7 3.5, 0 7" fill="#4a7fff"/>
+    </marker>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="2.5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background grid -->
+  <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1a2030" stroke-width="0.5"/>
+  </pattern>
+  <rect width="900" height="420" fill="url(#grid)" opacity="0.4"/>
+
+  <!-- ---- LAYER BOXES ---- -->
+
+  <!-- Hardware -->
+  <rect x="20" y="30" width="130" height="300" rx="6" fill="#0d1218" stroke="#1e3020" stroke-width="1.5"/>
+  <text x="85" y="22" text-anchor="middle" font-size="9" fill="#3a6040" letter-spacing="2">HARDWARE</text>
+
+  <!-- Ingestion -->
+  <rect x="168" y="30" width="145" height="300" rx="6" fill="#0d1218" stroke="#2a2018" stroke-width="1.5"/>
+  <text x="240" y="22" text-anchor="middle" font-size="9" fill="#604018" letter-spacing="2">INGESTION</text>
+
+  <!-- Embedding -->
+  <rect x="331" y="30" width="145" height="300" rx="6" fill="#0d1218" stroke="#182028" stroke-width="1.5"/>
+  <text x="403" y="22" text-anchor="middle" font-size="9" fill="#183048" letter-spacing="2">EMBEDDING</text>
+
+  <!-- Storage -->
+  <rect x="494" y="30" width="145" height="300" rx="6" fill="#0d1218" stroke="#183030" stroke-width="1.5"/>
+  <text x="566" y="22" text-anchor="middle" font-size="9" fill="#185050" letter-spacing="2">STORAGE</text>
+
+  <!-- Relay + Unity -->
+  <rect x="657" y="30" width="228" height="300" rx="6" fill="#0d1218" stroke="#201830" stroke-width="1.5"/>
+  <text x="770" y="22" text-anchor="middle" font-size="9" fill="#402860" letter-spacing="2">RELAY + PRESENTATION</text>
+
+  <!-- ---- SENSOR NODES ---- -->
+
+  <!-- Environmental -->
+  <rect x="30" y="50" width="110" height="42" rx="4" fill="#0a1a12" stroke="#20c068" stroke-width="1"/>
+  <text x="85" y="67" text-anchor="middle" font-size="9" fill="#20c068" font-weight="600" letter-spacing="1">ENVIRONMENTAL</text>
+  <text x="85" y="82" text-anchor="middle" font-size="8" fill="#3a6040">BME688 · SHT35</text>
+
+  <!-- Embodied -->
+  <rect x="30" y="104" width="110" height="42" rx="4" fill="#1a1008" stroke="#e07030" stroke-width="1"/>
+  <text x="85" y="121" text-anchor="middle" font-size="9" fill="#e07030" font-weight="600" letter-spacing="1">EMBODIED</text>
+  <text x="85" y="136" text-anchor="middle" font-size="8" fill="#604028">ICM-42688 · INA219</text>
+
+  <!-- Relational -->
+  <rect x="30" y="158" width="110" height="42" rx="4" fill="#080e1a" stroke="#5090f0" stroke-width="1"/>
+  <text x="85" y="175" text-anchor="middle" font-size="9" fill="#5090f0" font-weight="600" letter-spacing="1">RELATIONAL</text>
+  <text x="85" y="190" text-anchor="middle" font-size="8" fill="#2a4060">Piezo · VCNL4040</text>
+
+  <!-- High Bandwidth (planned) -->
+  <rect x="30" y="212" width="110" height="42" rx="4" fill="#100a18" stroke="#c050d0" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="85" y="229" text-anchor="middle" font-size="9" fill="#c050d0" font-weight="600" letter-spacing="1">HIGH-BW</text>
+  <text x="85" y="244" text-anchor="middle" font-size="8" fill="#502060">Camera · Thermal ▸</text>
+
+  <!-- OS Signals -->
+  <rect x="30" y="266" width="110" height="42" rx="4" fill="#0a1008" stroke="#40a050" stroke-width="1"/>
+  <text x="85" y="283" text-anchor="middle" font-size="9" fill="#40a050" font-weight="600" letter-spacing="1">OS SIGNALS</text>
+  <text x="85" y="298" text-anchor="middle" font-size="8" fill="#305030">CPU temp · load</text>
+
+  <!-- ---- INGESTION POLLERS ---- -->
+
+  <rect x="178" y="50" width="125" height="38" rx="4" fill="#0a1208" stroke="#20c068" stroke-width="1"/>
+  <text x="240" y="65" text-anchor="middle" font-size="9" fill="#20c068">EnvFieldPoller</text>
+  <text x="240" y="80" text-anchor="middle" font-size="8" fill="#3a6040">10s · quorum 2</text>
+
+  <rect x="178" y="100" width="125" height="38" rx="4" fill="#120e08" stroke="#e07030" stroke-width="1"/>
+  <text x="240" y="115" text-anchor="middle" font-size="9" fill="#e07030">EmbodiedPoller</text>
+  <text x="240" y="130" text-anchor="middle" font-size="8" fill="#604028">2s · quorum 1</text>
+
+  <rect x="178" y="150" width="125" height="38" rx="4" fill="#08101a" stroke="#5090f0" stroke-width="1"/>
+  <text x="240" y="165" text-anchor="middle" font-size="9" fill="#5090f0">RelationalPoller</text>
+  <text x="240" y="180" text-anchor="middle" font-size="8" fill="#2a4060">50ms · tap detect</text>
+
+  <rect x="178" y="200" width="125" height="38" rx="4" fill="#100a18" stroke="#c050d0" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="240" y="215" text-anchor="middle" font-size="9" fill="#c050d0">HBWPoller ▸</text>
+  <text x="240" y="230" text-anchor="middle" font-size="8" fill="#502060">planned</text>
+
+  <rect x="178" y="256" width="125" height="48" rx="4" fill="#0a1208" stroke="#3a5040" stroke-width="1"/>
+  <text x="240" y="271" text-anchor="middle" font-size="9" fill="#50a070">AgentStateProvider</text>
+  <text x="240" y="285" text-anchor="middle" font-size="8" fill="#3a5040">shared vitals</text>
+  <text x="240" y="298" text-anchor="middle" font-size="8" fill="#3a5040">power · temp · cpu</text>
+
+  <!-- ---- EMBEDDING ---- -->
+
+  <rect x="341" y="50" width="125" height="50" rx="4" fill="#080e18" stroke="#4060a0" stroke-width="1"/>
+  <text x="403" y="67" text-anchor="middle" font-size="9" fill="#6090d0">FeaturePacker</text>
+  <text x="403" y="81" text-anchor="middle" font-size="8" fill="#304060">→ natural language</text>
+  <text x="403" y="94" text-anchor="middle" font-size="8" fill="#304060">description</text>
+
+  <rect x="341" y="116" width="125" height="50" rx="4" fill="#080e18" stroke="#2080a0" stroke-width="1"/>
+  <text x="403" y="133" text-anchor="middle" font-size="9" fill="#30c0e0">Embedder</text>
+  <text x="403" y="147" text-anchor="middle" font-size="8" fill="#204050">Ollama local</text>
+  <text x="403" y="160" text-anchor="middle" font-size="8" fill="#204050">nomic-embed-text</text>
+
+  <rect x="341" y="182" width="125" height="50" rx="4" fill="#080e18" stroke="#3060a0" stroke-width="1"/>
+  <text x="403" y="199" text-anchor="middle" font-size="9" fill="#6080c0">MotifResonance</text>
+  <text x="403" y="213" text-anchor="middle" font-size="9" fill="#6080c0">Classifier</text>
+  <text x="403" y="227" text-anchor="middle" font-size="8" fill="#304060">HNSW · 768 dims</text>
+
+  <rect x="341" y="248" width="125" height="38" rx="4" fill="#100a18" stroke="#503080" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="403" y="263" text-anchor="middle" font-size="9" fill="#9060d0">DriftUpdater ▸</text>
+  <text x="403" y="278" text-anchor="middle" font-size="8" fill="#402060">centroid recompute</text>
+
+  <!-- ---- STORAGE ---- -->
+
+  <rect x="504" y="50" width="125" height="32" rx="4" fill="#081818" stroke="#30b8c0" stroke-width="1"/>
+  <text x="566" y="67" text-anchor="middle" font-size="9" fill="#30b8c0">sensor_readings</text>
+
+  <rect x="504" y="94" width="125" height="32" rx="4" fill="#081818" stroke="#30b8c0" stroke-width="1.5" filter="url(#glow)"/>
+  <text x="566" y="111" text-anchor="middle" font-size="9" fill="#60e8f0" font-weight="600">perceptual_events</text>
+
+  <rect x="504" y="138" width="125" height="32" rx="4" fill="#081818" stroke="#30b8c0" stroke-width="1"/>
+  <text x="566" y="155" text-anchor="middle" font-size="9" fill="#30b8c0">motif_resonance</text>
+
+  <rect x="504" y="182" width="125" height="32" rx="4" fill="#081818" stroke="#30b8c0" stroke-width="1"/>
+  <text x="566" y="199" text-anchor="middle" font-size="9" fill="#30b8c0">motifs (stub→ecology)</text>
+
+  <rect x="504" y="226" width="125" height="32" rx="4" fill="#081818" stroke="#30b8c0" stroke-width="1"/>
+  <text x="566" y="243" text-anchor="middle" font-size="9" fill="#30b8c0">agent_nodes</text>
+
+  <rect x="504" y="270" width="125" height="32" rx="4" fill="#100a18" stroke="#503080" stroke-width="1" stroke-dasharray="4,3"/>
+  <text x="566" y="287" text-anchor="middle" font-size="9" fill="#9060d0">perceptual_motif_drift</text>
+
+  <!-- ---- RELAY + UNITY ---- -->
+
+  <rect x="667" y="50" width="110" height="78" rx="4" fill="#181408" stroke="#e0c030" stroke-width="1"/>
+  <text x="722" y="67" text-anchor="middle" font-size="9" fill="#e0c030" font-weight="600">relay_api.py</text>
+  <text x="722" y="81" text-anchor="middle" font-size="8" fill="#60500a">GET /events</text>
+  <text x="722" y="94" text-anchor="middle" font-size="8" fill="#60500a">GET /vitals</text>
+  <text x="722" y="107" text-anchor="middle" font-size="8" fill="#60500a">GET /echoes</text>
+  <text x="722" y="120" text-anchor="middle" font-size="8" fill="#60500a">SSE /stream</text>
+
+  <rect x="667" y="142" width="110" height="58" rx="4" fill="#100818" stroke="#9060e0" stroke-width="1"/>
+  <text x="722" y="159" text-anchor="middle" font-size="9" fill="#9060e0" font-weight="600">EventClient</text>
+  <text x="722" y="173" text-anchor="middle" font-size="8" fill="#402060">poll 1Hz</text>
+  <text x="722" y="186" text-anchor="middle" font-size="8" fill="#402060">backoff · retry</text>
+
+  <rect x="667" y="212" width="110" height="48" rx="4" fill="#100818" stroke="#9060e0" stroke-width="1"/>
+  <text x="722" y="229" text-anchor="middle" font-size="9" fill="#9060e0" font-weight="600">EventBus</text>
+  <text x="722" y="243" text-anchor="middle" font-size="8" fill="#402060">enrich · dispatch</text>
+
+  <rect x="667" y="272" width="110" height="38" rx="4" fill="#100818" stroke="#9060e0" stroke-width="1"/>
+  <text x="722" y="289" text-anchor="middle" font-size="9" fill="#9060e0" font-weight="600">Visualizer</text>
+  <text x="722" y="303" text-anchor="middle" font-size="8" fill="#402060">AR glyphs · thermal</text>
+
+  <!-- Unity shell -->
+  <rect x="788" y="142" width="88" height="168" rx="4" fill="#0a0810" stroke="#7040b0" stroke-width="1" stroke-dasharray="5,3"/>
+  <text x="832" y="163" text-anchor="middle" font-size="9" fill="#7040b0">MotifGraph</text>
+  <text x="832" y="177" text-anchor="middle" font-size="8" fill="#402060">Scene ▸</text>
+  <text x="832" y="213" text-anchor="middle" font-size="9" fill="#7040b0">Resonance</text>
+  <text x="832" y="227" text-anchor="middle" font-size="8" fill="#402060">Renderer</text>
+  <text x="832" y="265" text-anchor="middle" font-size="9" fill="#7040b0">Thermal</text>
+  <text x="832" y="279" text-anchor="middle" font-size="8" fill="#402060">Comms ▸</text>
+
+  <!-- ---- FLOW ARROWS ---- -->
+
+  <!-- Sensors → Pollers -->
+  <line x1="140" y1="71" x2="176" y2="71" stroke="#20c068" stroke-width="1.5" marker-end="url(#arr-built)"/>
+  <line x1="140" y1="125" x2="176" y2="119" stroke="#e07030" stroke-width="1.5" marker-end="url(#arr-built)"/>
+  <line x1="140" y1="179" x2="176" y2="169" stroke="#5090f0" stroke-width="1.5" marker-end="url(#arr-built)"/>
+  <line x1="140" y1="233" x2="176" y2="219" stroke="#c050d0" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arr-planned)"/>
+  <line x1="140" y1="287" x2="176" y2="280" stroke="#40a050" stroke-width="1.5" marker-end="url(#arr-built)"/>
+
+  <!-- Pollers → FeaturePacker -->
+  <line x1="303" y1="71"  x2="339" y2="71"  stroke="#00e5a0" stroke-width="1.5" marker-end="url(#arr-built)"/>
+  <line x1="303" y1="119" x2="339" y2="90"  stroke="#00e5a0" stroke-width="1" marker-end="url(#arr-built)"/>
+  <line x1="303" y1="169" x2="339" y2="94"  stroke="#00e5a0" stroke-width="1" marker-end="url(#arr-built)"/>
+
+  <!-- FeaturePacker → Embedder -->
+  <line x1="403" y1="100" x2="403" y2="114" stroke="#00e5a0" stroke-width="1.5" marker-end="url(#arr-built)"/>
+  <!-- Embedder → Classifier -->
+  <line x1="403" y1="166" x2="403" y2="180" stroke="#00e5a0" stroke-width="1.5" marker-end="url(#arr-built)"/>
+
+  <!-- Pollers → sensor_readings (direct write) -->
+  <line x1="303" y1="280" x2="502" y2="66" stroke="#3a4a60" stroke-width="1" stroke-dasharray="3,3" marker-end="url(#arr)"/>
+
+  <!-- Classifier → perceptual_events + motif_resonance -->
+  <line x1="466" y1="207" x2="502" y2="110" stroke="#00e5a0" stroke-width="1.5" marker-end="url(#arr-built)"/>
+  <line x1="466" y1="215" x2="502" y2="154" stroke="#00e5a0" stroke-width="1.5" marker-end="url(#arr-built)"/>
+
+  <!-- motifs ← classifier query -->
+  <line x1="502" y1="198" x2="466" y2="213" stroke="#3060a0" stroke-width="1" stroke-dasharray="3,2" marker-end="url(#arr)"/>
+
+  <!-- Storage → Relay -->
+  <line x1="629" y1="110" x2="665" y2="89" stroke="#00e5a0" stroke-width="1.5" marker-end="url(#arr-built)"/>
+  <line x1="629" y1="154" x2="665" y2="100" stroke="#00e5a0" stroke-width="1" marker-end="url(#arr-built)"/>
+  <line x1="629" y1="243" x2="665" y2="100" stroke="#3a4a60" stroke-width="1" stroke-dasharray="3,2" marker-end="url(#arr)"/>
+
+  <!-- Relay → Client -->
+  <line x1="722" y1="128" x2="722" y2="140" stroke="#00e5a0" stroke-width="1.5" marker-end="url(#arr-built)"/>
+  <!-- Client → Bus -->
+  <line x1="722" y1="200" x2="722" y2="210" stroke="#00e5a0" stroke-width="1.5" marker-end="url(#arr-built)"/>
+  <!-- Bus → Visualizer -->
+  <line x1="722" y1="260" x2="722" y2="270" stroke="#00e5a0" stroke-width="1.5" marker-end="url(#arr-built)"/>
+  <!-- Bus → MotifGraph -->
+  <line x1="777" y1="236" x2="786" y2="236" stroke="#4a7fff" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arr-planned)"/>
+
+  <!-- DriftUpdater ← perceptual_motif_drift -->
+  <line x1="502" y1="286" x2="466" y2="267" stroke="#4a7fff" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arr-planned)"/>
+
+  <!-- Motif ecology label -->
+  <rect x="341" y="340" width="285" height="28" rx="4" fill="rgba(30,80,180,0.08)" stroke="#2050a0" stroke-width="1" stroke-dasharray="5,3"/>
+  <text x="483" y="351" text-anchor="middle" font-size="8" fill="#4070b0" letter-spacing="1.5">LINGUISTIC MOTIF CORPUS</text>
+  <text x="483" y="363" text-anchor="middle" font-size="8" fill="#304060">18-month conversation archive · pgvector · 623+ docs</text>
+  <line x1="483" y1="340" x2="483" y2="316" stroke="#2050a0" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arr-planned)"/>
+
+  <!-- Scale label -->
+  <text x="450" y="410" text-anchor="middle" font-size="8" fill="#2a3a50" letter-spacing="1">
+    ▸ dashed border / arrow = planned · solid = built and live
+  </text>
+</svg>
+</div>
+
+<!-- ============================================================
+     LEGEND
+     ============================================================ -->
+
+<div class="section-label">Legend</div>
+<div class="legend">
+  <div class="legend-section">
+    <div class="legend-title">Build Status</div>
+    <div class="legend-item"><span class="legend-dot" style="background:var(--built)"></span>Built and live on Pi 5</div>
+    <div class="legend-item"><span class="legend-dot" style="background:var(--partial)"></span>Live but partial (stub)</div>
+    <div class="legend-item"><span class="legend-dot" style="background:var(--planned)"></span>Planned — not yet written</div>
+  </div>
+  <div class="legend-section">
+    <div class="legend-title">Sensor Domains</div>
+    <div class="legend-item"><span class="legend-dot" style="background:var(--env)"></span>Environmental field</div>
+    <div class="legend-item"><span class="legend-dot" style="background:var(--embodied)"></span>Embodied state</div>
+    <div class="legend-item"><span class="legend-dot" style="background:var(--relat)"></span>Relational contact</div>
+    <div class="legend-item"><span class="legend-dot" style="background:var(--hbw)"></span>High-bandwidth (planned)</div>
+  </div>
+  <div class="legend-section">
+    <div class="legend-title">System Layers</div>
+    <div class="legend-item"><span class="legend-dot" style="background:var(--db)"></span>PostgreSQL + pgvector storage</div>
+    <div class="legend-item"><span class="legend-dot" style="background:var(--relay)"></span>FastAPI relay (port 8765)</div>
+    <div class="legend-item"><span class="legend-dot" style="background:var(--unity)"></span>Unity AR presentation</div>
+  </div>
+  <div class="legend-section">
+    <div class="legend-title">Key Design Principle</div>
+    <div class="legend-item" style="flex-direction:column;align-items:flex-start;gap:4px;">
+      <span style="color:var(--text);font-size:11px;">Sensor events are serialised as<br>natural language before embedding.</span>
+      <span style="color:var(--muted);font-size:10px;margin-top:4px;">A pressure drop and the word "threshold"<br>land in the same vector neighbourhood.</span>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     DETAIL TABLE
+     ============================================================ -->
+
+<div class="section-label">Component Detail</div>
+<table class="detail-table">
+  <thead>
+    <tr>
+      <th>Component</th>
+      <th>File / Location</th>
+      <th>Status</th>
+      <th>Key responsibility</th>
+      <th>Depends on</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>DB Schema</td>
+      <td>perceptual_schema_extension.sql</td>
+      <td><span class="status-dot" style="background:var(--built)"></span>Live · 768 dims</td>
+      <td>Tables, HNSW index, find_perceptual_echoes(), convenience view</td>
+      <td>PostgreSQL 15+ · pgvector</td>
+    </tr>
+    <tr>
+      <td>Embedding Pipeline</td>
+      <td>perceptual_embedding_pipeline.py</td>
+      <td><span class="status-dot" style="background:var(--built)"></span>Live</td>
+      <td>FeaturePacker → text description → Embedder → MotifResonanceClassifier → DB write</td>
+      <td>asyncpg · aiohttp · Ollama</td>
+    </tr>
+    <tr>
+      <td>Sensor Ingestion</td>
+      <td>sensor_ingestion_layer.py</td>
+      <td><span class="status-dot" style="background:var(--built)"></span>Ready (no hw yet)</td>
+      <td>Per-domain async pollers, rolling baseline, event detection, supervised restart</td>
+      <td>Embedding pipeline · asyncpg · adafruit libs</td>
+    </tr>
+    <tr>
+      <td>Relay API</td>
+      <td>relay_api.py</td>
+      <td><span class="status-dot" style="background:var(--built)"></span>Live port 8765</td>
+      <td>Bridges asyncpg → JSON for Unity. SSE stream. Echo query endpoint.</td>
+      <td>FastAPI · asyncpg · DATABASE_URL</td>
+    </tr>
+    <tr>
+      <td>Perceptual Models</td>
+      <td>AgentPerception/Models/PerceptualModels.cs</td>
+      <td><span class="status-dot" style="background:var(--built)"></span>Ready</td>
+      <td>C# mirror of DB schema. Hydrate() populates enums post-deserialisation.</td>
+      <td>Unity · JsonUtility</td>
+    </tr>
+    <tr>
+      <td>Event Client</td>
+      <td>AgentPerception/Network/PerceptualEventClient.cs</td>
+      <td><span class="status-dot" style="background:var(--built)"></span>Ready</td>
+      <td>HTTP polling 1Hz, vitals 5s, exponential backoff, echo one-shot query</td>
+      <td>Unity · UnityWebRequest</td>
+    </tr>
+    <tr>
+      <td>Event Bus</td>
+      <td>AgentPerception/Core/PerceptualEventBus.cs</td>
+      <td><span class="status-dot" style="background:var(--built)"></span>Ready</td>
+      <td>Enriches events (colour, weight, label symbols ↺ ∿ ✦). Fires typed events.</td>
+      <td>EventClient · Unity</td>
+    </tr>
+    <tr>
+      <td>AR Visualizer</td>
+      <td>AgentPerception/Visualization/AgentPerceptionVisualizer.cs</td>
+      <td><span class="status-dot" style="background:var(--built)"></span>Ready</td>
+      <td>Orbital glyph spawning, thermal skin on agent mesh, metabolic particle emission</td>
+      <td>EventBus · AR Foundation · TextMeshPro</td>
+    </tr>
+    <tr>
+      <td>Resonance Renderer</td>
+      <td>AgentPerception/Visualization/MotifResonanceRenderer.cs</td>
+      <td><span class="status-dot" style="background:var(--built)"></span>Ready</td>
+      <td>Bezier arcs from event glyphs to motif nodes. Echo panel UI.</td>
+      <td>EventBus · EventClient · motif node registry</td>
+    </tr>
+    <tr>
+      <td>Ollama / nomic-embed-text</td>
+      <td>localhost:11434</td>
+      <td><span class="status-dot" style="background:var(--built)"></span>Live</td>
+      <td>Local 768-dim embedding. Stable — no upstream model drift.</td>
+      <td>Pi 5 systemd service</td>
+    </tr>
+    <tr>
+      <td style="color:var(--planned)">HBW Poller</td>
+      <td style="color:var(--muted)">sensor_ingestion_layer.py</td>
+      <td><span class="status-dot" style="background:var(--planned)"></span>Planned</td>
+      <td>Camera + thermal camera ingestion. High-bandwidth domain completion.</td>
+      <td>Pi Camera · MLX90640 or similar</td>
+    </tr>
+    <tr>
+      <td style="color:var(--planned)">Motif Drift Updater</td>
+      <td style="color:var(--muted)">drift_updater.py (TBD)</td>
+      <td><span class="status-dot" style="background:var(--planned)"></span>Planned</td>
+      <td>Recomputes motif centroids as perceptual events accrete. Writes perceptual_motif_drift.</td>
+      <td>Embedding pipeline · motifs table</td>
+    </tr>
+    <tr>
+      <td style="color:var(--planned)">Motif Graph Scene</td>
+      <td style="color:var(--muted)">MotifGraphScene.cs (TBD)</td>
+      <td><span class="status-dot" style="background:var(--planned)"></span>Planned</td>
+      <td>Builds AR motif node graph. Registers nodes with ResonanceRenderer. Tap interaction.</td>
+      <td>ResonanceRenderer · EventClient · AR Foundation</td>
+    </tr>
+    <tr>
+      <td style="color:var(--planned)">Thermal Comms Protocol</td>
+      <td style="color:var(--muted)">thermal_comms.py (TBD)</td>
+      <td><span class="status-dot" style="background:var(--planned)"></span>Planned</td>
+      <td>CPU load modulation as inter-agent metabolic signal. Thermal Morse / IR glyphs.</td>
+      <td>EmbodiedPoller · relational_contact_events</td>
+    </tr>
+    <tr>
+      <td style="color:var(--partial)">Motifs table</td>
+      <td style="color:var(--muted)">motifs (stub in sensor_ecology DB)</td>
+      <td><span class="status-dot" style="background:var(--partial)"></span>Stub live</td>
+      <td>Will be replaced/connected to full 18-month conversation motif corpus with pgvector centroids.</td>
+      <td>Conversation archive · motif ecology MCP</td>
+    </tr>
+  </tbody>
+</table>
+
+<div style="font-family:'IBM Plex Mono',monospace; font-size:9px; color:#2a3a50; letter-spacing:0.15em; text-align:center; padding-bottom:24px;">
+  RELATIONAL AUTONOMOUS AGENT STACK · PI 5 · WHITEHORSE YT · 2026
+</div>
+
+</body>
+</html>
