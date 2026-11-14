@@ -23,8 +23,15 @@ namespace Meridian.AR
 
         void Start()
         {
-            udpClient = new UdpClient();
-            Debug.Log($"[HapticBridge] UDP Client initialized. Targeting {puckIpAddress}:{puckUdpPort}");
+            try
+            {
+                udpClient = new UdpClient();
+                Debug.Log($"[HapticBridge] UDP Client initialized. Targeting {puckIpAddress}:{puckUdpPort}");
+            }
+            catch (SocketException e)
+            {
+                Debug.LogError($"[HapticBridge] Failed to initialize UDP client: {e.Message}");
+            }
         }
 
         public void ProcessHapticElement(UIElement hapticElement)
@@ -87,7 +94,8 @@ namespace Meridian.AR
         {
             if (udpClient != null)
             {
-                udpClient.Close();
+                udpClient.Dispose();
+                udpClient = null;
             }
         }
     }

@@ -11,6 +11,31 @@ namespace Meridian.AR.Schema
     }
 
     [Serializable]
+    public class RelayEnvelope
+    {
+        public string type;
+        public PerceptualEvent data;
+    }
+
+    [Serializable]
+    public class PerceptualEvent
+    {
+        public string id;
+        public string node_id;
+        public string domain;
+        public FeatureSnapshot feature_snapshot;
+        public string event_time;
+        public string received_at;
+    }
+
+    [Serializable]
+    public class FeatureSnapshot
+    {
+        public string window_start;
+        public string render;
+    }
+
+    [Serializable]
     public class UIElement
     {
         public string type;             // e.g., "Wireframe_Highlight", "Haptic_Beacon", "Telemetry_Card", "Error_Alert"

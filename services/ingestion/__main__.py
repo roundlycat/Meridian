@@ -36,6 +36,7 @@ import aiomqtt
 import asyncpg
 
 from services.common import load_config
+from services.common.health import HealthState, start_health_server
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s: %(message)s")
 log = logging.getLogger("ingestion")
@@ -174,7 +175,7 @@ async def _handle(conn, topic: str, payload: bytes) -> None:
         log.info("readings: %s -> %d new / %d received", node_id, written, len(readings))
 
 
-async def _run_once(cfg) -> None:
+async def _run_once(cfg, health: HealthState) -> None:
     pool = await asyncpg.create_pool(cfg.database_url, min_size=1, max_size=4)
     try:
         # Durable subscription: a fixed identifier + clean_session=False makes the
@@ -188,6 +189,7 @@ async def _run_once(cfg) -> None:
         ) as client:
             for f in TOPIC_FILTERS:
                 await client.subscribe(f, qos=1)
+            health.ready = True
             log.info("subscribed on %s:%s to %s", cfg.mqtt_host, cfg.mqtt_port, TOPIC_FILTERS)
             async for message in client.messages:
                 async with pool.acquire() as conn:
@@ -198,13 +200,19 @@ async def _run_once(cfg) -> None:
 
 async def main() -> None:
     cfg = load_config()
+    health = HealthState()
+    health_runner = await start_health_server(cfg.health_host, cfg.health_port, health)
     log.info("ingestion starting (db=%s)", cfg.database_url.rsplit("@", 1)[-1])
-    while True:
-        try:
-            await _run_once(cfg)
-        except aiomqtt.MqttError as e:
-            log.warning("MQTT connection lost (%s); reconnecting in %ds", e, RECONNECT_BACKOFF_S)
-            await asyncio.sleep(RECONNECT_BACKOFF_S)
+    try:
+        while True:
+            try:
+                await _run_once(cfg, health)
+            except aiomqtt.MqttError as e:
+                health.ready = False
+                log.warning("MQTT connection lost (%s); reconnecting in %ds", e, RECONNECT_BACKOFF_S)
+                await asyncio.sleep(RECONNECT_BACKOFF_S)
+    finally:
+        await health_runner.cleanup()
 
 
 if __name__ == "__main__":

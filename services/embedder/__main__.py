@@ -114,13 +114,29 @@ def render_text(domain: str, channels: dict) -> str:
     return " ".join(parts)
 
 
-async def embed(session: aiohttp.ClientSession, cfg, text: str):
-    async with session.post(cfg.ollama_embed_url, json={"model": cfg.embed_model, "prompt": text}) as r:
-        r.raise_for_status()
-        vec = (await r.json())["embedding"]
-    if len(vec) != cfg.embedding_dim:
-        raise ValueError(f"embedder returned {len(vec)} dims, expected {cfg.embedding_dim}")
-    return "[" + ",".join(repr(float(x)) for x in vec) + "]"
+async def embed(session: aiohttp.ClientSession, cfg, text: str) -> str:
+    timeout = aiohttp.ClientTimeout(total=cfg.ollama_request_timeout_s)
+    for attempt in range(1, cfg.ollama_max_retries + 1):
+        try:
+            async with session.post(
+                cfg.ollama_embed_url,
+                json={"model": cfg.embed_model, "prompt": text},
+                timeout=timeout,
+            ) as response:
+                response.raise_for_status()
+                vec = (await response.json())["embedding"]
+            if len(vec) != cfg.embedding_dim:
+                raise ValueError(f"embedder returned {len(vec)} dims, expected {cfg.embedding_dim}")
+            return "[" + ",".join(repr(float(x)) for x in vec) + "]"
+        except (aiohttp.ClientError, asyncio.TimeoutError) as error:
+            if attempt == cfg.ollama_max_retries:
+                raise RuntimeError(f"Ollama request failed after {attempt} attempts") from error
+            delay_s = 2 ** (attempt - 1)
+            log.warning("Ollama request failed (attempt %d/%d): %s; retrying in %ds",
+                        attempt, cfg.ollama_max_retries, error, delay_s)
+            await asyncio.sleep(delay_s)
+
+    raise RuntimeError("OLLAMA_MAX_RETRIES must be at least 1")
 
 
 WINDOW_SQL = """

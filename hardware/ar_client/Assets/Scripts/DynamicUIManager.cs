@@ -45,11 +45,47 @@ namespace Meridian.AR
             }
         }
 
+        public void OnPerceptualEventReceived(PerceptualEvent perceptualEvent)
+        {
+            if (perceptualEvent == null)
+            {
+                Debug.LogWarning("[DynamicUIManager] Received an empty perceptual event.");
+                return;
+            }
+
+            string nodeId = string.IsNullOrEmpty(perceptualEvent.node_id) ? "Unknown node" : perceptualEvent.node_id;
+            string domain = string.IsNullOrEmpty(perceptualEvent.domain) ? "unknown domain" : perceptualEvent.domain;
+            string value = perceptualEvent.feature_snapshot != null && !string.IsNullOrEmpty(perceptualEvent.feature_snapshot.render)
+                ? perceptualEvent.feature_snapshot.render
+                : "No factual reading available.";
+
+            ProcessSchema(new InterfaceSchema
+            {
+                elements = new List<UIElement>
+                {
+                    new UIElement
+                    {
+                        type = "Telemetry_Card",
+                        targetObjectID = $"{nodeId}:{domain}",
+                        title = $"{nodeId} — {domain}",
+                        value = value,
+                        color = "#00FFCC"
+                    }
+                }
+            });
+        }
+
         private void ProcessSchema(InterfaceSchema schema)
         {
-            if (rootContainer == null) 
+            if (rootContainer == null)
             {
                 Debug.LogWarning("[DynamicUIManager] Root container is null. Please assign a UIDocument.");
+                return;
+            }
+
+            if (schema == null || schema.elements == null)
+            {
+                Debug.LogWarning("[DynamicUIManager] Received a schema without elements.");
                 return;
             }
 
@@ -111,10 +147,14 @@ namespace Meridian.AR
             {
                 if (valueLabel != null) valueLabel.style.color = parsedColor;
                 // Update the border color dynamically as well
-                cardInstance.Q<VisualElement>(className: "telemetry-card").style.borderTopColor = parsedColor;
-                cardInstance.Q<VisualElement>(className: "telemetry-card").style.borderBottomColor = parsedColor;
-                cardInstance.Q<VisualElement>(className: "telemetry-card").style.borderLeftColor = parsedColor;
-                cardInstance.Q<VisualElement>(className: "telemetry-card").style.borderRightColor = parsedColor;
+                VisualElement card = cardInstance.Q<VisualElement>(className: "telemetry-card");
+                if (card != null)
+                {
+                    card.style.borderTopColor = parsedColor;
+                    card.style.borderBottomColor = parsedColor;
+                    card.style.borderLeftColor = parsedColor;
+                    card.style.borderRightColor = parsedColor;
+                }
             }
             
             Debug.Log($"[UI] Mapped Telemetry Card -> Title: {element.title}, Value: {element.value}");

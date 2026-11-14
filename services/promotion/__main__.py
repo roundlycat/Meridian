@@ -43,6 +43,7 @@ import numpy as np
 from sklearn.cluster import HDBSCAN
 
 from services.common import load_config
+from services.common.db import assert_embedding_dim
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s: %(message)s")
 log = logging.getLogger("promotion")
@@ -69,9 +70,9 @@ def _vec_literal(v: np.ndarray) -> str:
     return "[" + ",".join(repr(float(x)) for x in v) + "]"
 
 
-async def _load_events(conn):
+async def _load_events(conn, embedding_dim: int):
     n = await conn.fetchval("SELECT count(*) FROM perceptual_events WHERE embedding IS NOT NULL")
-    vecs = np.empty((n, 768), dtype=np.float32)
+    vecs = np.empty((n, embedding_dim), dtype=np.float32)
     ids, nodes, domains, times = [], [], [], []
     i = 0
     async with conn.transaction():
@@ -107,7 +108,7 @@ def _cluster(vecs: np.ndarray, min_cluster_size: int, sample_cap: int):
         centroids.append(c / (np.linalg.norm(c) or 1.0))
     log.info("HDBSCAN found %d clusters (%d sample points were noise)",
              len(centroids), int((labels == -1).sum()))
-    return np.array(centroids, dtype=np.float32) if centroids else np.empty((0, 768), np.float32)
+    return np.array(centroids, dtype=np.float32) if centroids else np.empty((0, vecs.shape[1]), np.float32)
 
 
 async def _existing_motifs(conn):
@@ -120,7 +121,8 @@ async def main(sample_cap: int, assign_dist: float, min_cluster_size: int) -> No
     cfg = load_config()
     conn = await asyncpg.connect(cfg.database_url)
     try:
-        ids, nodes, domains, times, vecs = await _load_events(conn)
+        await assert_embedding_dim(conn, cfg)
+        ids, nodes, domains, times, vecs = await _load_events(conn, cfg.embedding_dim)
         centroids = _cluster(vecs, min_cluster_size, sample_cap)
         if len(centroids) == 0:
             log.warning("no clusters formed; nothing to promote")
@@ -136,7 +138,7 @@ async def main(sample_cap: int, assign_dist: float, min_cluster_size: int) -> No
 
         existing = await _existing_motifs(conn)
         ex_centroids = (_normalize(np.array([m["centroid"] for m in existing], dtype=np.float32))
-                        if existing else np.empty((0, 768), np.float32))
+                        if existing else np.empty((0, cfg.embedding_dim), np.float32))
         matched_ids = set()
         promoted = candidates = 0
 

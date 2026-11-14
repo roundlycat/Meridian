@@ -30,6 +30,7 @@ import asyncpg
 import websockets
 
 from services.common import load_config
+from services.common.health import HealthState, start_health_server
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s: %(message)s")
 log = logging.getLogger("relay")
@@ -100,21 +101,33 @@ async def fanout_worker(pool: asyncpg.Pool, queue: asyncio.Queue) -> None:
 async def main() -> None:
     cfg = load_config()
     queue: asyncio.Queue = asyncio.Queue()
+    health = HealthState()
+    health_runner = await start_health_server(cfg.health_host, cfg.health_port, health)
 
-    pool = await asyncpg.create_pool(cfg.database_url, min_size=1, max_size=4, init=_init_conn)
-    # Dedicated long-lived connection for LISTEN (not from the pool, which recycles).
-    listen_conn = await asyncpg.connect(cfg.database_url)
+    pool = None
+    listen_conn = None
+    try:
+        pool = await asyncpg.create_pool(cfg.database_url, min_size=1, max_size=4, init=_init_conn)
+        # Dedicated long-lived connection for LISTEN (not from the pool, which recycles).
+        listen_conn = await asyncpg.connect(cfg.database_url)
 
-    def on_notify(connection, pid, channel, payload):   # sync callback, runs in the loop
-        queue.put_nowait(payload)
+        def on_notify(connection, pid, channel, payload):   # sync callback, runs in the loop
+            queue.put_nowait(payload)
 
-    await listen_conn.add_listener(cfg.notify_channel, on_notify)
-    log.info("LISTEN %s on %s", cfg.notify_channel, cfg.database_url.rsplit("@", 1)[-1])
+        await listen_conn.add_listener(cfg.notify_channel, on_notify)
+        health.ready = True
+        log.info("LISTEN %s on %s", cfg.notify_channel, cfg.database_url.rsplit("@", 1)[-1])
 
-    asyncio.create_task(fanout_worker(pool, queue))
-    async with websockets.serve(ws_handler, cfg.relay_host, cfg.relay_port):
-        log.info("relay WebSocket up on ws://%s:%d", cfg.relay_host, cfg.relay_port)
-        await asyncio.Future()   # run forever
+        asyncio.create_task(fanout_worker(pool, queue))
+        async with websockets.serve(ws_handler, cfg.relay_host, cfg.relay_port):
+            log.info("relay WebSocket up on ws://%s:%d", cfg.relay_host, cfg.relay_port)
+            await asyncio.Future()   # run forever
+    finally:
+        if listen_conn is not None:
+            await listen_conn.close()
+        if pool is not None:
+            await pool.close()
+        await health_runner.cleanup()
 
 
 if __name__ == "__main__":

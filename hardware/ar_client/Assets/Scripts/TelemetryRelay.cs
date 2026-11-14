@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using NativeWebSocket;
+using Meridian.AR.Schema;
 
 namespace Meridian.AR
 {
@@ -13,10 +14,18 @@ namespace Meridian.AR
     {
         public string relayUrl = "ws://localhost:8080";
         public DynamicUIManager uiManager;
+        public float reconnectDelaySeconds = 5f;
         
         private WebSocket websocket;
+        private bool isQuitting;
+        private bool reconnectScheduled;
 
         async void Start()
+        {
+            await Connect();
+        }
+
+        private async System.Threading.Tasks.Task Connect()
         {
             Debug.Log($"[TelemetryRelay] Connecting to Relay API at {relayUrl}");
             websocket = new WebSocket(relayUrl);
@@ -34,6 +43,10 @@ namespace Meridian.AR
             websocket.OnClose += (e) =>
             {
                 Debug.Log("[TelemetryRelay] Connection closed!");
+                if (!isQuitting && !reconnectScheduled)
+                {
+                    StartCoroutine(Reconnect());
+                }
             };
 
             websocket.OnMessage += (bytes) =>
@@ -46,11 +59,42 @@ namespace Meridian.AR
                     // The UI Toolkit changes must be scheduled on the main thread
                     // Since NativeWebSocket's DispatchMessageQueue is called in Update(), 
                     // it is safe to interact with Unity objects here.
-                    uiManager.OnSchemaReceived(message);
+                    RouteMessage(message);
                 }
             };
 
             await websocket.Connect();
+        }
+
+        private IEnumerator Reconnect()
+        {
+            reconnectScheduled = true;
+            yield return new WaitForSeconds(reconnectDelaySeconds);
+            reconnectScheduled = false;
+
+            if (!isQuitting)
+            {
+                _ = Connect();
+            }
+        }
+
+        private void RouteMessage(string message)
+        {
+            try
+            {
+                RelayEnvelope envelope = JsonUtility.FromJson<RelayEnvelope>(message);
+                if (envelope != null && envelope.type == "perceptual_event")
+                {
+                    uiManager.OnPerceptualEventReceived(envelope.data);
+                    return;
+                }
+
+                uiManager.OnSchemaReceived(message);
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogError($"[TelemetryRelay] Failed to route message: {e.Message}");
+            }
         }
 
         void Update()
@@ -66,6 +110,7 @@ namespace Meridian.AR
 
         private async void OnApplicationQuit()
         {
+            isQuitting = true;
             if (websocket != null)
             {
                 await websocket.Close();

@@ -20,6 +20,8 @@ from pathlib import Path
 # Keys a service may set/override via the real environment.
 _KNOWN_KEYS = (
     "DATABASE_URL", "EMBED_MODEL", "EMBEDDING_DIM", "OLLAMA_EMBED_URL",
+    "OLLAMA_REQUEST_TIMEOUT_S", "OLLAMA_MAX_RETRIES",
+    "HEALTH_HOST", "HEALTH_PORT",
     "MQTT_HOST", "MQTT_PORT", "RELAY_HOST", "RELAY_PORT", "NOTIFY_CHANNEL",
     "RAW_RETENTION_DAYS",
     "SPOOL_LOCAL_MQTT_HOST", "SPOOL_LOCAL_MQTT_PORT", "SPOOL_DB_PATH",
@@ -67,6 +69,10 @@ class Config:
     embed_model: str
     embedding_dim: int
     ollama_embed_url: str
+    ollama_request_timeout_s: float
+    ollama_max_retries: int
+    health_host: str
+    health_port: int
     mqtt_host: str
     mqtt_port: int
     relay_host: str
@@ -104,6 +110,10 @@ def load_config() -> Config:
         embed_model=raw.get("EMBED_MODEL", "nomic-embed-text"),
         embedding_dim=int(raw.get("EMBEDDING_DIM", "768")),
         ollama_embed_url=raw.get("OLLAMA_EMBED_URL", "http://localhost:11434/api/embeddings"),
+        ollama_request_timeout_s=float(raw.get("OLLAMA_REQUEST_TIMEOUT_S", "30")),
+        ollama_max_retries=int(raw.get("OLLAMA_MAX_RETRIES", "3")),
+        health_host=raw.get("HEALTH_HOST", "0.0.0.0"),
+        health_port=int(raw.get("HEALTH_PORT", "8081")),
         mqtt_host=raw.get("MQTT_HOST", "localhost"),
         mqtt_port=int(raw.get("MQTT_PORT", "1883")),
         relay_host=raw.get("RELAY_HOST", "0.0.0.0"),
