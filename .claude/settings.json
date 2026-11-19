@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "timeout": 30,
+            "command": "python \"$CLAUDE_PROJECT_DIR/deploy/update_state.py\" --write"
+          }
+        ]
+      }
+    ]
+  }
+}
